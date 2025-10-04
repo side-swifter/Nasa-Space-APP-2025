@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Dashboard from './pages/Dashboard'
@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import locationService, { LocationInfo } from './services/locationService'
 import './App.css'
 
 // Protected Route Component
@@ -24,7 +25,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     )
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
+  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />
 }
 
 // Public Route Component (redirect to dashboard if authenticated)
@@ -47,9 +48,36 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // App Layout Component
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
+
+  useEffect(() => {
+    // Get user's location with city name
+    const getUserLocation = async () => {
+      try {
+        console.log('🔍 Getting user location...');
+        const location = await locationService.getCurrentLocationInfo();
+        console.log('📍 Location found:', location);
+        setLocationInfo(location);
+      } catch (error) {
+        console.warn('Location service error:', error);
+        // Keep default location (NYC) and set basic info
+        setLocationInfo({
+          lat: 40.7128,
+          lon: -74.0060,
+          city: 'New York',
+          state: 'NY',
+          country: 'United States',
+          displayName: 'New York, NY',
+        });
+      }
+    };
+
+    getUserLocation();
+  }, []);
+
   return (
     <div className="min-h-screen bg-kraken-dark flex flex-col">
-      <Header />
+      <Header locationInfo={locationInfo} />
       <main className="flex-1 container mx-auto px-4 py-6">
         {children}
       </main>

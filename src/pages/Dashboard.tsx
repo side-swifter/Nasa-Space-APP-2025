@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, TrendingUp, AlertCircle, Thermometer, Wind, Eye, Droplets } from 'lucide-react';
+import { TrendingUp, AlertCircle, Thermometer, Wind, Eye, Droplets } from 'lucide-react';
 import AirQualityMap from '../components/AirQualityMap';
 import AirQualityChart from '../components/AirQualityChart';
 import MetricCard from '../components/MetricCard';
@@ -182,69 +182,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Location Header */}
-      <div className="bg-kraken-dark border border-kraken-beige border-opacity-30 rounded-lg p-6 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-kraken-beige bg-opacity-20 rounded-full">
-              <MapPin className="w-8 h-8 text-kraken-beige" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2 mb-2">
-                <MapPin className="w-5 h-5 text-kraken-beige" />
-                <h1 className="text-2xl font-bold text-kraken-light font-mono">
-                  {locationInfo?.displayName || 'Loading Location...'}
-                </h1>
-              </div>
-              <div className="flex items-center space-x-4 text-sm text-kraken-light opacity-70 font-mono">
-                <span>
-                  📍 {locationService.formatCoordinates(currentLocation.lat, currentLocation.lon)}
-                </span>
-                {locationInfo?.country && (
-                  <span>🌍 {locationInfo.country}</span>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-kraken-light opacity-70 font-mono mb-1">
-              Last Updated
-            </div>
-            <div className="text-kraken-beige font-mono text-lg font-bold">
-              {new Date().toLocaleTimeString()}
-            </div>
-            <div className="text-xs text-kraken-light opacity-50 font-mono mt-1">
-              Live NASA TEMPO Data
-            </div>
-          </div>
-        </div>
-        
-        {/* Location Status */}
-        <div className="mt-4 pt-4 border-t border-kraken-beige border-opacity-20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6 text-xs font-mono">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-kraken-light">Location Services Active</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                <span className="text-kraken-light">Satellite Data Connected</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                <span className="text-kraken-light">Real-time Updates</span>
-              </div>
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-3 py-1 bg-kraken-beige bg-opacity-20 text-kraken-beige rounded font-mono text-xs hover:bg-opacity-30 transition-colors"
-            >
-              Refresh Location
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Current AQI Banner */}
       {currentAirQuality && (

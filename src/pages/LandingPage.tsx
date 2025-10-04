@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowRight, 
-  Satellite, 
-  MapPin, 
-  TrendingUp, 
-  Shield, 
-  Globe, 
+import { useAuth } from '../contexts/AuthContext';
+import {
+  ArrowRight,
+  Satellite,
+  MapPin,
+  TrendingUp,
+  Shield,
+  Globe,
   Eye,
   Wind,
   Droplets,
@@ -16,6 +17,7 @@ import {
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const features = [
@@ -55,7 +57,7 @@ const LandingPage: React.FC = () => {
       setCurrentSlide((prev) => (prev + 1) % features.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [features.length]);
 
   return (
     <div className="min-h-screen bg-kraken-dark text-kraken-light overflow-hidden">
@@ -71,19 +73,40 @@ const LandingPage: React.FC = () => {
       <header className="relative z-10 p-6">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img 
-              src="/kraken-octopus.svg" 
-              alt="Kraken Logo" 
+            <img
+              src="/kraken-octopus.svg"
+              alt="Kraken Logo"
               className="w-12 h-12 object-contain"
             />
             <div className="text-2xl font-bold text-kraken-beige font-mono">KRAKEN</div>
           </div>
-          <button
-            onClick={() => navigate('/signup')}
-            className="px-6 py-2 bg-kraken-beige bg-opacity-20 text-kraken-beige rounded-lg font-mono text-sm hover:bg-opacity-30 transition-colors border border-kraken-beige border-opacity-30"
-          >
-            Launch Dashboard
-          </button>
+
+          {/* Conditional Header Buttons */}
+          <div className="flex items-center space-x-4">
+            {isAuthenticated ? (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-6 py-2 bg-kraken-beige bg-opacity-20 text-kraken-beige rounded-lg font-mono text-sm hover:bg-opacity-30 transition-colors border border-kraken-beige border-opacity-30"
+              >
+                Launch Dashboard
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-6 py-2 bg-kraken-dark bg-opacity-50 text-kraken-light rounded-lg font-mono text-sm hover:bg-opacity-70 transition-colors border border-kraken-beige border-opacity-20"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => navigate('/signup')}
+                  className="px-6 py-2 bg-kraken-beige bg-opacity-20 text-kraken-beige rounded-lg font-mono text-sm hover:bg-opacity-30 transition-colors border border-kraken-beige border-opacity-30"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -92,23 +115,18 @@ const LandingPage: React.FC = () => {
         <div className="text-center max-w-4xl mx-auto">
           {/* Main Logo */}
           <div className="mb-8">
-            <img 
-              src="/kraken-octopus.svg" 
-              alt="Kraken Octopus" 
-              className="w-32 h-32 mx-auto object-contain animate-pulse"
+            <img
+              src="/main-krak.svg"
+              alt="Kraken Octopus"
+              className="w-76 h-76 mx-auto object-contain animate-pulse"
             />
           </div>
 
-          {/* Title */}
-          <h1 className="text-6xl md:text-8xl font-bold text-kraken-beige font-mono mb-6">
-            KRAKEN
-          </h1>
-          
           {/* Subtitle */}
           <p className="text-2xl md:text-3xl text-kraken-light font-mono mb-4 opacity-90">
             Air Quality Forecasting Platform
           </p>
-          
+
           {/* NASA Badge */}
           <div className="inline-flex items-center space-x-2 bg-kraken-red bg-opacity-20 px-4 py-2 rounded-full border border-kraken-red border-opacity-30 mb-8">
             <Satellite className="w-5 h-5 text-kraken-red" />
@@ -117,7 +135,7 @@ const LandingPage: React.FC = () => {
 
           {/* Description */}
           <p className="text-lg text-kraken-light font-mono max-w-2xl mx-auto mb-12 leading-relaxed opacity-80">
-            Real-time air quality monitoring and forecasting using NASA's cutting-edge satellite technology. 
+            Real-time air quality monitoring and forecasting using NASA's cutting-edge satellite technology.
             Make informed decisions about your health and outdoor activities with professional-grade atmospheric data.
           </p>
 
@@ -126,7 +144,7 @@ const LandingPage: React.FC = () => {
             onClick={() => navigate('/signup')}
             className="group inline-flex items-center space-x-3 bg-kraken-beige text-kraken-dark px-8 py-4 rounded-lg font-mono text-lg font-bold hover:bg-opacity-90 transition-all transform hover:scale-105 shadow-lg"
           >
-            <span>Explore Air Quality Data</span>
+            <span>Get Started with Kraken</span>
             <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
@@ -138,13 +156,13 @@ const LandingPage: React.FC = () => {
           <h2 className="text-3xl font-bold text-kraken-beige font-mono text-center mb-12">
             Professional Air Quality Intelligence
           </h2>
-          
+
           <div className="relative h-64 overflow-hidden rounded-lg border border-kraken-beige border-opacity-20">
             {features.map((feature, index) => (
               <div
                 key={index}
                 className={`absolute inset-0 transition-transform duration-1000 ease-in-out ${
-                  index === currentSlide ? 'translate-x-0' : 
+                  index === currentSlide ? 'translate-x-0' :
                   index < currentSlide ? '-translate-x-full' : 'translate-x-full'
                 }`}
               >
@@ -189,7 +207,7 @@ const LandingPage: React.FC = () => {
           <p className="text-kraken-light font-mono opacity-80 mb-12">
             Track the pollutants that matter most for your health and environment
           </p>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {pollutants.map((pollutant, index) => (
               <div
