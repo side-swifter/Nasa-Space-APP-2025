@@ -198,6 +198,7 @@ const Dashboard: React.FC = () => {
           unit="ppb"
           icon={<Wind className="w-5 h-5" />}
           color="text-blue-400"
+          dataType="no2"
         />
         <MetricCard
           title="O₃"
@@ -205,6 +206,7 @@ const Dashboard: React.FC = () => {
           unit="ppb"
           icon={<Eye className="w-5 h-5" />}
           color="text-green-400"
+          dataType="o3"
         />
         <MetricCard
           title="PM2.5"
@@ -212,6 +214,7 @@ const Dashboard: React.FC = () => {
           unit="μg/m³"
           icon={<Droplets className="w-5 h-5" />}
           color="text-purple-400"
+          dataType="pm25"
         />
         <MetricCard
           title="PM10"
@@ -219,6 +222,7 @@ const Dashboard: React.FC = () => {
           unit="μg/m³"
           icon={<Thermometer className="w-5 h-5" />}
           color="text-orange-400"
+          dataType="pm10"
         />
       </div>
 

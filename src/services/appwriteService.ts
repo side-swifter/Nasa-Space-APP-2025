@@ -83,27 +83,44 @@ class SupabaseAuthService {
     // If we have onboarding data, also store it in a separate table for easier querying
     if (onboardingData && data.user) {
       try {
-        const { error: profileError } = await supabase
+        console.log('💾 Attempting to save user profile with data:', onboardingData)
+        
+        const profileData = {
+          user_id: data.user.id,
+          email: email,
+          full_name: name,
+          onboarding_completed: true,
+          age_group: onboardingData.age_group || null,
+          health_conditions: onboardingData.health_conditions || [],
+          air_sensitivity: onboardingData.air_sensitivity || null,
+          activity_level: onboardingData.activity_level || null,
+          outdoor_activities: onboardingData.outdoor_activities || [],
+          primary_location: onboardingData.primary_location || null,
+          notification_preferences: onboardingData.notification_preferences || [],
+          concerns: onboardingData.concerns || [],
+          created_at: new Date().toISOString(),
+        }
+
+        console.log('💾 Profile data to insert:', profileData)
+
+        const { data: insertData, error: profileError } = await supabase
           .from('user_profiles')
-          .insert({
-            user_id: data.user.id,
-            email: email,
-            full_name: name,
-            onboarding_completed: true,
-            ...onboardingData,
-            created_at: new Date().toISOString(),
-          })
+          .insert(profileData)
+          .select()
 
         if (profileError) {
-          console.warn('⚠️ Failed to save user profile:', profileError)
+          console.error('❌ Failed to save user profile:', profileError)
+          console.error('❌ Profile error details:', profileError.message, profileError.details)
           // Don't throw here - account creation was successful
         } else {
-          console.log('✅ User profile saved successfully')
+          console.log('✅ User profile saved successfully:', insertData)
         }
       } catch (profileError) {
-        console.warn('⚠️ Error saving user profile:', profileError)
+        console.error('❌ Exception saving user profile:', profileError)
         // Don't throw here - account creation was successful
       }
+    } else {
+      console.log('⚠️ No onboarding data or user to save:', { onboardingData, user: data.user })
     }
 
     console.log('✅ Signup successful:', data.user.email)

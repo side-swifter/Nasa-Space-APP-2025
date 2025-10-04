@@ -37,7 +37,7 @@ const Login: React.FC = () => {
             <img
               src="/main-krak.svg"
               alt="Kraken Octopus"
-              className="w-60 h-60 mx-auto object-contain animate-pulse"
+              className="w-64 h-64 mx-auto object-contain"
             />
           </div>
           <h2 className="text-3xl font-bold text-kraken-light font-mono">Welcome back</h2>
