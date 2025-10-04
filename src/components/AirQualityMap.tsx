@@ -1,113 +1,141 @@
-import React from 'react';
-import { MapPin } from 'lucide-react';
-import { AirQualityReading } from '../services/nasaApiService';
+import React, { useState } from 'react';
+import { MapPin, Satellite, Eye, Wind } from 'lucide-react';
 
 interface AirQualityMapProps {
-  center: [number, number];
-  airQualityData: AirQualityReading | null;
-  onLocationChange: (lat: number, lon: number) => void;
+  currentLocation: { lat: number; lon: number };
+  onLocationChange?: (lat: number, lon: number) => void;
 }
 
-const AirQualityMap: React.FC<AirQualityMapProps> = ({ center, airQualityData, onLocationChange }) => {
-  const handleLocationClick = () => {
-    // Simulate clicking on different locations
-    const newLat = center[0] + (Math.random() - 0.5) * 0.1;
-    const newLon = center[1] + (Math.random() - 0.5) * 0.1;
-    onLocationChange(newLat, newLon);
+const AirQualityMap: React.FC<AirQualityMapProps> = ({ 
+  currentLocation
+}) => {
+  const [mapLayer, setMapLayer] = useState<'satellite' | 'ozone' | 'aerosol' | 'no2'>('satellite');
+
+  const getMapUrl = () => {
+    const baseUrl = 'https://worldview.earthdata.nasa.gov/snapshot';
+    const bounds = `${currentLocation.lon-15},${currentLocation.lat-10},${currentLocation.lon+15},${currentLocation.lat+10}`;
+    const date = '2024-10-04';
+    
+    const layerConfigs = {
+      satellite: `v=-180,-90,180,90&t=${date}&l=MODIS_Aqua_CorrectedReflectance_TrueColor,MODIS_Terra_CorrectedReflectance_TrueColor&lg=false&s=${bounds}`,
+      ozone: `v=-180,-90,180,90&t=${date}&l=OMPS_NPP_nmTO3_L3_Daily,MODIS_Aqua_CorrectedReflectance_TrueColor&lg=false&s=${bounds}`,
+      aerosol: `v=-180,-90,180,90&t=${date}&l=MODIS_Combined_MAIAC_L2G_AerosolOpticalDepth,MODIS_Aqua_CorrectedReflectance_TrueColor&lg=false&s=${bounds}`,
+      no2: `v=-180,-90,180,90&t=${date}&l=TROPOMI_NO2_L2,MODIS_Aqua_CorrectedReflectance_TrueColor&lg=false&s=${bounds}`
+    };
+
+    return `${baseUrl}?${layerConfigs[mapLayer]}`;
   };
 
-  const getAQIColor = (aqi: number) => {
-    if (aqi <= 50) return '#10b981';
-    if (aqi <= 100) return '#f59e0b';
-    if (aqi <= 150) return '#f97316';
-    if (aqi <= 200) return '#ef4444';
-    return '#7c2d12';
-  };
 
   return (
-    <div className="relative">
-      {/* Placeholder Map */}
-      <div 
-        className="w-full h-96 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-lg relative overflow-hidden cursor-pointer"
-        onClick={handleLocationClick}
-      >
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="grid grid-cols-8 grid-rows-6 h-full">
-            {Array.from({ length: 48 }).map((_, i) => (
-              <div key={i} className="border border-blue-400 border-opacity-30"></div>
-            ))}
-          </div>
-        </div>
-
-        {/* Location Marker */}
+    <div className="relative w-full h-96 bg-kraken-dark rounded-lg overflow-hidden border border-kraken-beige border-opacity-20">
+      {/* NASA Worldview Map */}
+      <div className="relative w-full h-full">
+        <iframe
+          src={getMapUrl()}
+          className="w-full h-full border-0"
+          title="NASA Worldview Air Quality Map"
+          loading="lazy"
+        />
+        
+        {/* Current Location Marker Overlay */}
         <div 
-          className="absolute transform -translate-x-1/2 -translate-y-1/2"
-          style={{ 
-            left: '50%', 
-            top: '50%',
+          className="absolute transform -translate-x-1/2 -translate-y-full z-20 pointer-events-none"
+          style={{
+            left: `${((currentLocation.lon + 180) / 360) * 100}%`,
+            top: `${((90 - currentLocation.lat) / 180) * 100}%`
           }}
         >
-          <div 
-            className="w-8 h-8 rounded-full border-4 border-white flex items-center justify-center shadow-lg"
-            style={{ backgroundColor: airQualityData ? getAQIColor(airQualityData.aqi) : '#6b7280' }}
-          >
-            <span className="text-white font-bold text-xs font-mono">
-              {airQualityData?.aqi || '?'}
-            </span>
-          </div>
-          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-kraken-dark bg-opacity-90 rounded px-2 py-1 text-xs text-white font-mono whitespace-nowrap">
-            AQI: {airQualityData?.aqi || 'Loading...'}
-          </div>
-        </div>
-
-        {/* Additional Data Points */}
-        {airQualityData && (
-          <>
-            <div className="absolute top-4 left-4 bg-kraken-dark bg-opacity-80 rounded-lg p-3 text-white font-mono text-xs">
-              <div className="font-bold mb-2">Current Location</div>
-              <div>Lat: {center[0].toFixed(4)}</div>
-              <div>Lon: {center[1].toFixed(4)}</div>
+          <div className="flex flex-col items-center">
+            <div className="w-8 h-8 bg-kraken-red rounded-full border-4 border-white shadow-lg animate-pulse flex items-center justify-center">
+              <MapPin className="w-4 h-4 text-white" />
             </div>
-
-            <div className="absolute top-4 right-4 bg-kraken-dark bg-opacity-80 rounded-lg p-3 text-white font-mono text-xs">
-              <div className="font-bold mb-2">Air Quality</div>
-              <div>PM2.5: {airQualityData.pm25} μg/m³</div>
-              <div>PM10: {airQualityData.pm10} μg/m³</div>
-              <div>NO₂: {airQualityData.no2} ppb</div>
-              <div>O₃: {airQualityData.o3} ppb</div>
-            </div>
-          </>
-        )}
-
-        {/* Click Instruction */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-kraken-beige bg-opacity-90 rounded-lg px-3 py-2 text-kraken-dark font-mono text-xs">
-          <MapPin className="w-4 h-4 inline mr-1" />
-          Click to change location
+            <div className="w-1 h-6 bg-kraken-red shadow-lg"></div>
+          </div>
         </div>
       </div>
-      
-      {/* Map Legend */}
-      <div className="absolute bottom-4 left-4 bg-kraken-dark bg-opacity-90 rounded-lg p-3 text-xs font-mono">
-        <div className="font-bold text-kraken-beige mb-2">AQI Scale</div>
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="text-kraken-light">Good (0-50)</span>
+
+      {/* Layer Controls */}
+      <div className="absolute top-4 right-4 space-y-2">
+        <button
+          onClick={() => setMapLayer('satellite')}
+          className={`block px-3 py-2 rounded font-mono text-xs transition-colors ${
+            mapLayer === 'satellite' 
+              ? 'bg-kraken-beige text-kraken-dark' 
+              : 'bg-black bg-opacity-70 text-white hover:bg-opacity-90'
+          }`}
+        >
+          <Satellite className="w-4 h-4 inline mr-1" />
+          Satellite
+        </button>
+        <button
+          onClick={() => setMapLayer('ozone')}
+          className={`block px-3 py-2 rounded font-mono text-xs transition-colors ${
+            mapLayer === 'ozone' 
+              ? 'bg-kraken-beige text-kraken-dark' 
+              : 'bg-blue-600 bg-opacity-80 text-white hover:bg-opacity-100'
+          }`}
+        >
+          <Eye className="w-4 h-4 inline mr-1" />
+          Ozone
+        </button>
+        <button
+          onClick={() => setMapLayer('aerosol')}
+          className={`block px-3 py-2 rounded font-mono text-xs transition-colors ${
+            mapLayer === 'aerosol' 
+              ? 'bg-kraken-beige text-kraken-dark' 
+              : 'bg-orange-600 bg-opacity-80 text-white hover:bg-opacity-100'
+          }`}
+        >
+          <Wind className="w-4 h-4 inline mr-1" />
+          Aerosols
+        </button>
+        <button
+          onClick={() => setMapLayer('no2')}
+          className={`block px-3 py-2 rounded font-mono text-xs transition-colors ${
+            mapLayer === 'no2' 
+              ? 'bg-kraken-beige text-kraken-dark' 
+              : 'bg-purple-600 bg-opacity-80 text-white hover:bg-opacity-100'
+          }`}
+        >
+          <Wind className="w-4 h-4 inline mr-1" />
+          NO₂
+        </button>
+      </div>
+
+      {/* NASA Attribution */}
+      <div className="absolute top-4 left-4 bg-black bg-opacity-70 rounded px-3 py-2 border border-kraken-beige border-opacity-30">
+        <div className="text-white font-mono text-xs">
+          <div className="flex items-center space-x-2 mb-1">
+            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+            <span>NASA Worldview</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <span className="text-kraken-light">Moderate (51-100)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-            <span className="text-kraken-light">Unhealthy (101-150)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span className="text-kraken-light">Very Unhealthy (151+)</span>
-          </div>
+          <div>Lat: {currentLocation.lat.toFixed(4)}</div>
+          <div>Lon: {currentLocation.lon.toFixed(4)}</div>
         </div>
+      </div>
+
+      {/* Map Legend */}
+      <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 rounded p-3 border border-kraken-beige border-opacity-30">
+        <h4 className="text-white font-mono text-xs font-bold mb-2">
+          {mapLayer === 'satellite' && '🛰️ True Color Satellite'}
+          {mapLayer === 'ozone' && '🌍 Ozone Column (DU)'}
+          {mapLayer === 'aerosol' && '💨 Aerosol Optical Depth'}
+          {mapLayer === 'no2' && '🏭 Nitrogen Dioxide'}
+        </h4>
+        <div className="text-white font-mono text-xs">
+          {mapLayer === 'satellite' && 'Real satellite imagery from MODIS'}
+          {mapLayer === 'ozone' && 'Ozone layer thickness measurement'}
+          {mapLayer === 'aerosol' && 'Particle pollution in atmosphere'}
+          {mapLayer === 'no2' && 'Traffic & industrial emissions'}
+        </div>
+      </div>
+
+      {/* Click Instructions */}
+      <div className="absolute bottom-4 right-4 bg-black bg-opacity-70 rounded p-2 border border-kraken-beige border-opacity-30">
+        <p className="text-white font-mono text-xs text-center">
+          🛰️ Live NASA satellite data
+        </p>
       </div>
     </div>
   );

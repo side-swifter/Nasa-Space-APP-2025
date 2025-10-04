@@ -6,6 +6,7 @@ import MetricCard from '../components/MetricCard';
 import AlertPanel from '../components/AlertPanel';
 import ForecastPanel from '../components/ForecastPanel';
 import DataInfoModal from '../components/DataInfoModal';
+import LocationPickerModal from '../components/LocationPickerModal';
 import nasaApiService, { AirQualityReading } from '../services/nasaApiService';
 import locationService, { LocationInfo } from '../services/locationService';
 
@@ -17,8 +18,8 @@ const Dashboard: React.FC = () => {
   const [forecastData, setForecastData] = useState<AirQualityReading[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isReloading, setIsReloading] = useState(false);
   const [isAqiModalOpen, setIsAqiModalOpen] = useState(false);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
 
   useEffect(() => {
     // Get user's location with city name
@@ -148,37 +149,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleReload = async () => {
-    setIsReloading(true);
-    
-    try {
-      // Reload location data
-      const location = await locationService.getCurrentLocationInfo();
-      setLocationInfo(location);
-      setCurrentLocation({
-        lat: location.lat,
-        lon: location.lon,
-      });
-
-      // Reload air quality data
-      const [current, historical, forecast] = await Promise.all([
-        nasaApiService.getCurrentAirQuality(location.lat, location.lon),
-        nasaApiService.getHistoricalAirQuality(location.lat, location.lon, 7),
-        nasaApiService.getAirQualityForecast(location.lat, location.lon)
-      ]);
-
-      setCurrentAirQuality(current);
-      setHistoricalData(historical);
-      setForecastData(forecast);
-      
-      // Hide loading animation once data is received
-      setIsReloading(false);
-    } catch (error) {
-      console.error('Error reloading data:', error);
-      setError('Failed to reload data');
-      setIsReloading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -191,16 +161,6 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  if (isReloading) {
-    return (
-      <div className="fixed inset-0 bg-kraken-dark bg-opacity-95 flex items-center justify-center z-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-kraken-beige mx-auto mb-4"></div>
-          <p className="text-kraken-light font-mono text-lg">Reloading data...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -280,10 +240,10 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={handleReload}
+              onClick={() => setIsLocationPickerOpen(true)}
               className="px-3 py-1 bg-kraken-beige bg-opacity-20 text-kraken-beige rounded font-mono text-xs hover:bg-opacity-30 transition-colors"
             >
-              Refresh Location
+              Change Location
             </button>
           </div>
         </div>
@@ -364,9 +324,8 @@ const Dashboard: React.FC = () => {
           <h3 className="text-lg font-bold text-kraken-light mb-4 font-mono">
             Air Quality Map
           </h3>
-          <AirQualityMap
-            center={[currentLocation.lat, currentLocation.lon]}
-            airQualityData={currentAirQuality}
+          <AirQualityMap 
+            currentLocation={currentLocation}
             onLocationChange={handleLocationChange}
           />
         </div>
@@ -412,6 +371,14 @@ const Dashboard: React.FC = () => {
           color="text-kraken-beige"
         />
       )}
+
+      {/* Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={isLocationPickerOpen}
+        onClose={() => setIsLocationPickerOpen(false)}
+        onLocationSelect={handleLocationChange}
+        currentLocation={currentLocation}
+      />
     </div>
   );
 };
