@@ -312,9 +312,8 @@ const Dashboard: React.FC = () => {
           <h3 className="text-lg font-bold text-kraken-light mb-4 font-mono">
             Air Quality Map
           </h3>
-          <AirQualityMap
-            center={[currentLocation.lat, currentLocation.lon]}
-            airQualityData={currentAirQuality}
+          <AirQualityMap 
+            currentLocation={currentLocation}
             onLocationChange={handleLocationChange}
           />
         </div>

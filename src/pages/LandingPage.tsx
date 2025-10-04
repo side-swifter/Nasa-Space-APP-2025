@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ArrowRight, 
   Satellite, 
@@ -13,11 +14,8 @@ import {
   Activity
 } from 'lucide-react';
 
-interface LandingPageProps {
-  onEnterApp: () => void;
-}
-
-const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
+const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const features = [
@@ -81,7 +79,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             <div className="text-2xl font-bold text-kraken-beige font-mono">KRAKEN</div>
           </div>
           <button
-            onClick={onEnterApp}
+            onClick={() => navigate('/signup')}
             className="px-6 py-2 bg-kraken-beige bg-opacity-20 text-kraken-beige rounded-lg font-mono text-sm hover:bg-opacity-30 transition-colors border border-kraken-beige border-opacity-30"
           >
             Launch Dashboard
@@ -125,7 +123,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
           {/* CTA Button */}
           <button
-            onClick={onEnterApp}
+            onClick={() => navigate('/signup')}
             className="group inline-flex items-center space-x-3 bg-kraken-beige text-kraken-dark px-8 py-4 rounded-lg font-mono text-lg font-bold hover:bg-opacity-90 transition-all transform hover:scale-105 shadow-lg"
           >
             <span>Explore Air Quality Data</span>
@@ -240,7 +238,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             Start monitoring air quality in your area with professional NASA satellite data
           </p>
           <button
-            onClick={onEnterApp}
+            onClick={() => navigate('/signup')}
             className="group inline-flex items-center space-x-3 bg-kraken-red text-white px-8 py-4 rounded-lg font-mono text-lg font-bold hover:bg-opacity-90 transition-all transform hover:scale-105 shadow-lg"
           >
             <span>Launch Kraken Dashboard</span>
