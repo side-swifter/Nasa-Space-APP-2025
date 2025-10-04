@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+body {
+  margin: 0;
+  background-color: #211f20;
+  color: #e5e7eb;
+}
+
+.kraken-gradient {
+  background: linear-gradient(135deg, #e5bf99 0%, #cd4634 100%);
+}
+
+.air-quality-good {
+  background-color: #10b981;
+}
+
+.air-quality-moderate {
+  background-color: #f59e0b;
+}
+
+.air-quality-unhealthy {
+  background-color: #ef4444;
+}
+
+.air-quality-hazardous {
+  background-color: #7c2d12;
+}

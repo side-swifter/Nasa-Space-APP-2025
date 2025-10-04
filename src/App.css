@@ -1,0 +1,25 @@
+.leaflet-container {
+  height: 400px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.chart-container {
+  background: rgba(229, 191, 153, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(229, 191, 153, 0.2);
+}
+
+.metric-card {
+  background: linear-gradient(135deg, rgba(229, 191, 153, 0.1) 0%, rgba(205, 70, 52, 0.1) 100%);
+  border: 1px solid rgba(229, 191, 153, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(205, 70, 52, 0.2);
+}
