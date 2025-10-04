@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
+import OnboardingQuiz from '../components/OnboardingQuiz';
 
 const SignUp: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ const SignUp: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
   
   const { signup } = useAuth();
   const navigate = useNavigate();
@@ -44,20 +46,43 @@ const SignUp: React.FC = () => {
     
     if (!validateForm()) return;
     
+    // Instead of creating account immediately, show the quiz
+    setShowQuiz(true);
+  };
+
+  const handleQuizComplete = async (answers: Record<string, any>) => {
     setIsLoading(true);
 
     try {
-      await signup(formData.email, formData.password, formData.name);
+      // Create the account with quiz answers
+      await signup(formData.email, formData.password, formData.name, answers);
       setSuccess(true);
       setTimeout(() => {
         navigate('/dashboard');
       }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed');
+      setShowQuiz(false); // Go back to form on error
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleQuizBack = () => {
+    setShowQuiz(false);
+    setError('');
+  };
+
+  // Show quiz if user has completed initial form
+  if (showQuiz) {
+    return (
+      <OnboardingQuiz
+        onComplete={handleQuizComplete}
+        onBack={handleQuizBack}
+        isLoading={isLoading}
+      />
+    );
+  }
 
   if (success) {
     return (

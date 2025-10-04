@@ -54,7 +54,7 @@ class SupabaseAuthService {
     console.log('✅ Login successful:', data.user.email)
   }
 
-  async createAccount(email: string, password: string, name: string): Promise<void> {
+  async createAccount(email: string, password: string, name: string, onboardingData?: Record<string, any>): Promise<void> {
     console.log('📝 Attempting signup for:', email, 'with name:', name)
     
     const { data, error } = await supabase.auth.signUp({
@@ -63,6 +63,7 @@ class SupabaseAuthService {
       options: {
         data: {
           full_name: name,
+          onboarding_data: onboardingData || {},
         }
       }
     })
@@ -77,6 +78,32 @@ class SupabaseAuthService {
     if (!data.user) {
       console.error('❌ No user returned from signup')
       throw new Error('Account creation failed - no user returned')
+    }
+
+    // If we have onboarding data, also store it in a separate table for easier querying
+    if (onboardingData && data.user) {
+      try {
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert({
+            user_id: data.user.id,
+            email: email,
+            full_name: name,
+            onboarding_completed: true,
+            ...onboardingData,
+            created_at: new Date().toISOString(),
+          })
+
+        if (profileError) {
+          console.warn('⚠️ Failed to save user profile:', profileError)
+          // Don't throw here - account creation was successful
+        } else {
+          console.log('✅ User profile saved successfully')
+        }
+      } catch (profileError) {
+        console.warn('⚠️ Error saving user profile:', profileError)
+        // Don't throw here - account creation was successful
+      }
     }
 
     console.log('✅ Signup successful:', data.user.email)
