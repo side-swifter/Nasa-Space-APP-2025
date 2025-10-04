@@ -105,7 +105,7 @@ class NasaApiService {
   }
 
   // Generate mock air quality data based on TEMPO data
-  generateAirQualityData(tempoData: TempoData[], lat: number, lon: number): AirQualityReading[] {
+  generateAirQualityData(_tempoData: TempoData[], lat: number, lon: number): AirQualityReading[] {
     const readings: AirQualityReading[] = [];
     
     // Generate readings for the last 24 hours
@@ -164,7 +164,8 @@ class NasaApiService {
   // Get air quality forecast (next 24 hours)
   async getAirQualityForecast(lat: number, lon: number): Promise<AirQualityReading[]> {
     try {
-      const tempoData = await this.getTempoData(lat, lon);
+      // Note: TEMPO data would be used for real forecasting
+      await this.getTempoData(lat, lon);
       
       // Generate forecast data for next 24 hours
       const forecast: AirQualityReading[] = [];

@@ -28,7 +28,7 @@ const AirQualityChart: React.FC<AirQualityChartProps> = ({ data }) => {
     'O₃': reading.o3,
   }));
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-kraken-dark border border-kraken-beige border-opacity-30 rounded-lg p-3 shadow-lg">
