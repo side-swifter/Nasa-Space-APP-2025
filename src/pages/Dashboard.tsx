@@ -5,8 +5,6 @@ import AirQualityChart from '../components/AirQualityChart';
 import MetricCard from '../components/MetricCard';
 import AlertPanel from '../components/AlertPanel';
 import ForecastPanel from '../components/ForecastPanel';
-import DataInfoModal from '../components/DataInfoModal';
-import LocationPickerModal from '../components/LocationPickerModal';
 import nasaApiService, { AirQualityReading } from '../services/nasaApiService';
 import locationService, { LocationInfo } from '../services/locationService';
 
@@ -18,8 +16,6 @@ const Dashboard: React.FC = () => {
   const [forecastData, setForecastData] = useState<AirQualityReading[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAqiModalOpen, setIsAqiModalOpen] = useState(false);
-  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
 
   useEffect(() => {
     // Get user's location with city name
@@ -127,17 +123,20 @@ const Dashboard: React.FC = () => {
         }
       }, 1000); // 1 second delay to simulate loading
     };
-    
+
     generateMockData();
   }, [currentLocation]);
 
   const handleLocationChange = async (lat: number, lon: number) => {
     setCurrentLocation({ lat, lon });
+    
+    // Update location info for the new coordinates
     try {
       const newLocationInfo = await locationService.reverseGeocode(lat, lon);
       setLocationInfo(newLocationInfo);
     } catch (error) {
       console.warn('Failed to get location info for new coordinates:', error);
+      // Update with basic coordinate info
       setLocationInfo({
         lat,
         lon,
@@ -149,7 +148,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -160,7 +158,6 @@ const Dashboard: React.FC = () => {
       </div>
     );
   }
-
 
   if (error) {
     return (
@@ -240,10 +237,10 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => setIsLocationPickerOpen(true)}
+              onClick={() => window.location.reload()}
               className="px-3 py-1 bg-kraken-beige bg-opacity-20 text-kraken-beige rounded font-mono text-xs hover:bg-opacity-30 transition-colors"
             >
-              Change Location
+              Refresh Location
             </button>
           </div>
         </div>
@@ -252,21 +249,16 @@ const Dashboard: React.FC = () => {
       {/* Current AQI Banner */}
       {currentAirQuality && (
         <div 
-          className="rounded-lg p-6 text-white font-mono cursor-pointer hover:opacity-90 transition-opacity"
+          className="rounded-lg p-6 text-white font-mono"
           style={{ backgroundColor: aqiCategory.color }}
-          onClick={() => setIsAqiModalOpen(true)}
         >
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold font-mono mb-2">
-                Air Quality Index: {currentAirQuality.aqi}
-              </h2>
-              <p className="text-xl opacity-90 font-mono">
-                {aqiCategory.category} - {aqiCategory.description}
-              </p>
-              <p className="text-sm opacity-70 font-mono mt-2">
-                Click for detailed explanation
-              </p>
+              <div className="text-3xl font-bold mb-2">
+                AQI {currentAirQuality.aqi}
+              </div>
+              <div className="text-xl mb-1">{aqiCategory.category}</div>
+              <div className="opacity-90">{aqiCategory.description}</div>
             </div>
             <div className="text-right">
               <TrendingUp className="w-8 h-8 mb-2" />
@@ -289,7 +281,6 @@ const Dashboard: React.FC = () => {
           unit="ppb"
           icon={<Wind className="w-5 h-5" />}
           color="text-blue-400"
-          dataType="no2"
         />
         <MetricCard
           title="O₃"
@@ -297,7 +288,6 @@ const Dashboard: React.FC = () => {
           unit="ppb"
           icon={<Eye className="w-5 h-5" />}
           color="text-green-400"
-          dataType="o3"
         />
         <MetricCard
           title="PM2.5"
@@ -305,7 +295,6 @@ const Dashboard: React.FC = () => {
           unit="μg/m³"
           icon={<Droplets className="w-5 h-5" />}
           color="text-purple-400"
-          dataType="pm25"
         />
         <MetricCard
           title="PM10"
@@ -313,7 +302,6 @@ const Dashboard: React.FC = () => {
           unit="μg/m³"
           icon={<Thermometer className="w-5 h-5" />}
           color="text-orange-400"
-          dataType="pm10"
         />
       </div>
 
@@ -324,8 +312,9 @@ const Dashboard: React.FC = () => {
           <h3 className="text-lg font-bold text-kraken-light mb-4 font-mono">
             Air Quality Map
           </h3>
-          <AirQualityMap 
-            currentLocation={currentLocation}
+          <AirQualityMap
+            center={[currentLocation.lat, currentLocation.lon]}
+            airQualityData={currentAirQuality}
             onLocationChange={handleLocationChange}
           />
         </div>
@@ -357,28 +346,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* AQI Modal */}
-      {currentAirQuality && (
-        <DataInfoModal
-          isOpen={isAqiModalOpen}
-          onClose={() => setIsAqiModalOpen(false)}
-          title="Air Quality Index"
-          value={currentAirQuality.aqi}
-          unit="AQI"
-          type="aqi"
-          icon={<TrendingUp className="w-6 h-6" />}
-          color="text-kraken-beige"
-        />
-      )}
-
-      {/* Location Picker Modal */}
-      <LocationPickerModal
-        isOpen={isLocationPickerOpen}
-        onClose={() => setIsLocationPickerOpen(false)}
-        onLocationSelect={handleLocationChange}
-        currentLocation={currentLocation}
-      />
     </div>
   );
 };
