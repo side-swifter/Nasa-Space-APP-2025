@@ -29,35 +29,39 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-kraken-dark flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
-        {/* Header */}
+        {/* Header with Logo */}
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-gradient-to-r from-orange-400 to-red-600 rounded-lg flex items-center justify-center mb-4">
-            <span className="text-white font-bold text-xl">K</span>
+          <div className="mb-8">
+            <img
+              src="/main-krak.svg"
+              alt="Kraken Octopus"
+              className="w-60 h-60 mx-auto object-contain animate-pulse"
+            />
           </div>
-          <h2 className="text-3xl font-bold text-white">Welcome back</h2>
-          <p className="mt-2 text-gray-400">Sign in to your Kraken account</p>
+          <h2 className="text-3xl font-bold text-kraken-light font-mono">Welcome back</h2>
+          <p className="mt-2 text-kraken-light opacity-70 font-mono">Sign in to your Kraken account</p>
         </div>
 
         {/* Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6 bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-8" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center space-x-3">
-              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="bg-kraken-red bg-opacity-10 border border-kraken-red border-opacity-30 rounded-lg p-4 flex items-center space-x-3">
+              <AlertCircle className="h-5 w-5 text-kraken-red flex-shrink-0" />
+              <p className="text-kraken-red text-sm font-mono">{error}</p>
             </div>
           )}
 
           <div className="space-y-4">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-kraken-light mb-2 font-mono">
                 Email address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-kraken-light opacity-50" />
                 </div>
                 <input
                   id="email"
@@ -67,7 +71,7 @@ const Login: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-600 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+                  className="block w-full pl-10 pr-3 py-3 border border-kraken-beige border-opacity-30 rounded-lg bg-kraken-dark bg-opacity-50 text-kraken-light placeholder-kraken-light placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-kraken-beige focus:border-kraken-beige focus:border-opacity-50 transition-colors font-mono"
                   placeholder="Enter your email"
                 />
               </div>
@@ -75,12 +79,12 @@ const Login: React.FC = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-kraken-light mb-2 font-mono">
                 Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-kraken-light opacity-50" />
                 </div>
                 <input
                   id="password"
@@ -90,7 +94,7 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-12 py-3 border border-gray-600 rounded-lg bg-gray-800/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+                  className="block w-full pl-10 pr-12 py-3 border border-kraken-beige border-opacity-30 rounded-lg bg-kraken-dark bg-opacity-50 text-kraken-light placeholder-kraken-light placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-kraken-beige focus:border-kraken-beige focus:border-opacity-50 transition-colors font-mono"
                   placeholder="Enter your password"
                 />
                 <button
@@ -99,9 +103,9 @@ const Login: React.FC = () => {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-300" />
+                    <EyeOff className="h-5 w-5 text-kraken-light opacity-50 hover:text-kraken-light" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-300" />
+                    <Eye className="h-5 w-5 text-kraken-light opacity-50 hover:text-kraken-light" />
                   )}
                 </button>
               </div>
@@ -115,9 +119,9 @@ const Login: React.FC = () => {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-600 rounded bg-gray-800"
+                className="h-4 w-4 text-kraken-beige focus:ring-kraken-beige border-kraken-beige border-opacity-30 rounded bg-kraken-dark"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-kraken-light font-mono">
                 Remember me
               </label>
             </div>
@@ -125,7 +129,7 @@ const Login: React.FC = () => {
             <div className="text-sm">
               <Link
                 to="/forgot-password"
-                className="font-medium text-orange-400 hover:text-orange-300 transition-colors"
+                className="font-medium text-kraken-beige hover:text-kraken-light transition-colors font-mono"
               >
                 Forgot your password?
               </Link>
@@ -137,11 +141,11 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-kraken-dark bg-kraken-beige hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-kraken-beige disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-mono"
             >
               {isLoading ? (
                 <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-kraken-dark mr-2"></div>
                   Signing in...
                 </div>
               ) : (
@@ -152,11 +156,11 @@ const Login: React.FC = () => {
 
           {/* Sign up link */}
           <div className="text-center">
-            <p className="text-gray-400">
+            <p className="text-kraken-light opacity-70 font-mono">
               Don't have an account?{' '}
               <Link
                 to="/signup"
-                className="font-medium text-orange-400 hover:text-orange-300 transition-colors"
+                className="font-medium text-kraken-beige hover:text-kraken-light transition-colors font-mono"
               >
                 Sign up here
               </Link>

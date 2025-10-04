@@ -6,11 +6,10 @@ import MetricCard from '../components/MetricCard';
 import AlertPanel from '../components/AlertPanel';
 import ForecastPanel from '../components/ForecastPanel';
 import nasaApiService, { AirQualityReading } from '../services/nasaApiService';
-import locationService, { LocationInfo } from '../services/locationService';
+import locationService from '../services/locationService';
 
 const Dashboard: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState({ lat: 40.7128, lon: -74.0060 }); // Default to NYC
-  const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
   const [currentAirQuality, setCurrentAirQuality] = useState<AirQualityReading | null>(null);
   const [historicalData, setHistoricalData] = useState<AirQualityReading[]>([]);
   const [forecastData, setForecastData] = useState<AirQualityReading[]>([]);
@@ -24,22 +23,13 @@ const Dashboard: React.FC = () => {
         console.log('🔍 Getting user location...');
         const location = await locationService.getCurrentLocationInfo();
         console.log('📍 Location found:', location);
-        setLocationInfo(location);
         setCurrentLocation({
           lat: location.lat,
           lon: location.lon,
         });
       } catch (error) {
         console.warn('Location service error:', error);
-        // Keep default location (NYC) and set basic info
-        setLocationInfo({
-          lat: 40.7128,
-          lon: -74.0060,
-          city: 'New York',
-          state: 'NY',
-          country: 'United States',
-          displayName: 'New York, NY',
-        });
+        // Keep default location (NYC)
       }
     };
 
@@ -132,19 +122,9 @@ const Dashboard: React.FC = () => {
     
     // Update location info for the new coordinates
     try {
-      const newLocationInfo = await locationService.reverseGeocode(lat, lon);
-      setLocationInfo(newLocationInfo);
+      await locationService.reverseGeocode(lat, lon);
     } catch (error) {
       console.warn('Failed to get location info for new coordinates:', error);
-      // Update with basic coordinate info
-      setLocationInfo({
-        lat,
-        lon,
-        city: 'Unknown City',
-        state: '',
-        country: 'Unknown',
-        displayName: `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
-      });
     }
   };
 
