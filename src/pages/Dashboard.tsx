@@ -5,6 +5,7 @@ import AirQualityChart from '../components/AirQualityChart';
 import MetricCard from '../components/MetricCard';
 import AlertPanel from '../components/AlertPanel';
 import ForecastPanel from '../components/ForecastPanel';
+import DataInfoModal from '../components/DataInfoModal';
 import nasaApiService, { AirQualityReading } from '../services/nasaApiService';
 import locationService, { LocationInfo } from '../services/locationService';
 
@@ -17,6 +18,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isReloading, setIsReloading] = useState(false);
+  const [isAqiModalOpen, setIsAqiModalOpen] = useState(false);
 
   useEffect(() => {
     // Get user's location with city name
@@ -290,16 +292,21 @@ const Dashboard: React.FC = () => {
       {/* Current AQI Banner */}
       {currentAirQuality && (
         <div 
-          className="rounded-lg p-6 text-white font-mono"
+          className="rounded-lg p-6 text-white font-mono cursor-pointer hover:opacity-90 transition-opacity"
           style={{ backgroundColor: aqiCategory.color }}
+          onClick={() => setIsAqiModalOpen(true)}
         >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-3xl font-bold mb-2">
-                AQI {currentAirQuality.aqi}
-              </div>
-              <div className="text-xl mb-1">{aqiCategory.category}</div>
-              <div className="opacity-90">{aqiCategory.description}</div>
+              <h2 className="text-3xl font-bold font-mono mb-2">
+                Air Quality Index: {currentAirQuality.aqi}
+              </h2>
+              <p className="text-xl opacity-90 font-mono">
+                {aqiCategory.category} - {aqiCategory.description}
+              </p>
+              <p className="text-sm opacity-70 font-mono mt-2">
+                Click for detailed explanation
+              </p>
             </div>
             <div className="text-right">
               <TrendingUp className="w-8 h-8 mb-2" />
@@ -322,6 +329,7 @@ const Dashboard: React.FC = () => {
           unit="ppb"
           icon={<Wind className="w-5 h-5" />}
           color="text-blue-400"
+          dataType="no2"
         />
         <MetricCard
           title="O₃"
@@ -329,6 +337,7 @@ const Dashboard: React.FC = () => {
           unit="ppb"
           icon={<Eye className="w-5 h-5" />}
           color="text-green-400"
+          dataType="o3"
         />
         <MetricCard
           title="PM2.5"
@@ -336,6 +345,7 @@ const Dashboard: React.FC = () => {
           unit="μg/m³"
           icon={<Droplets className="w-5 h-5" />}
           color="text-purple-400"
+          dataType="pm25"
         />
         <MetricCard
           title="PM10"
@@ -343,6 +353,7 @@ const Dashboard: React.FC = () => {
           unit="μg/m³"
           icon={<Thermometer className="w-5 h-5" />}
           color="text-orange-400"
+          dataType="pm10"
         />
       </div>
 
@@ -387,6 +398,20 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* AQI Modal */}
+      {currentAirQuality && (
+        <DataInfoModal
+          isOpen={isAqiModalOpen}
+          onClose={() => setIsAqiModalOpen(false)}
+          title="Air Quality Index"
+          value={currentAirQuality.aqi}
+          unit="AQI"
+          type="aqi"
+          icon={<TrendingUp className="w-6 h-6" />}
+          color="text-kraken-beige"
+        />
+      )}
     </div>
   );
 };
