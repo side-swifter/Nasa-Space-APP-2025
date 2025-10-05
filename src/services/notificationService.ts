@@ -54,7 +54,7 @@ class NotificationService {
    * Trigger AI-powered notifications based on air quality and user settings
    */
   async triggerNotifications(trigger: NotificationTrigger): Promise<NotificationResult> {
-    const { type, airQuality, forecastData = [], userSettings, userId } = trigger;
+    const { type, airQuality, userSettings, userId } = trigger;
     
     try {
       console.log(`🔔 Triggering ${type} notification for user ${userId}`);
@@ -141,6 +141,7 @@ class NotificationService {
   /**
    * Build enhanced AI prompt using user-defined variables (currently unused but kept for future enhancement)
    */
+  // @ts-ignore - Method kept for future enhancement
   private buildEnhancedPrompt(
     airQuality: AirQualityReading, 
     forecastData: AirQualityReading[], 
