@@ -1,23 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Map,AlertCircle, Thermometer, Wind, Eye, Droplets, Brain } from 'lucide-react';
+import { Map,AlertCircle, Thermometer, Wind, Eye, Droplets, Brain, Clock } from 'lucide-react';
 import AirQualityMap from '../components/AirQualityMap';
 import AirQualityChart from '../components/AirQualityChart';
 import MetricCard from '../components/MetricCard';
 import AlertPanel from '../components/AlertPanel';
 import ForecastPanel from '../components/ForecastPanel';
 import AIForecastPanel from '../components/AIForecastPanel';
+import AnimatedForecastMap from '../components/AnimatedForecastMap';
+import TemporalNASAMap from '../components/TemporalNASAMap';
 import nasaApiService, { AirQualityReading } from '../services/nasaApiService';
 import realAirQualityService from '../services/realAirQualityService';
 import locationService from '../services/locationService';
+import { ExtendedForecast, AIForecastResult } from '../services/aiForecastingService';
 
 const Dashboard: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState({ lat: 40.7128, lon: -74.0060 }); // Default to NYC
   const [currentAirQuality, setCurrentAirQuality] = useState<AirQualityReading | null>(null);
   const [historicalData, setHistoricalData] = useState<AirQualityReading[]>([]);
   const [forecastData, setForecastData] = useState<AirQualityReading[]>([]);
+  const [aiForecast, setAiForecast] = useState<ExtendedForecast | null>(null);
+  const [currentForecastTime, setCurrentForecastTime] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'forecast' | 'ai-forecast'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'forecast' | 'ai-forecast' | 'temporal'>('overview');
 
   useEffect(() => {
     // Get user's location with city name
@@ -290,13 +295,14 @@ const Dashboard: React.FC = () => {
       <div className="flex space-x-1 bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-1">
         {[
           { key: 'overview', label: 'Overview', icon: Map },
+          { key: 'temporal', label: 'Time-Lapse Map', icon: Clock },
           { key: 'forecast', label: 'Standard Forecast', icon: Eye },
           { key: 'ai-forecast', label: 'AI Forecast', icon: Brain }
         ].map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key as any)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded font-mono text-sm transition-colors ${
+            className={`flex items-center space-x-2 px-3 py-2 rounded font-mono text-sm transition-colors ${
               activeTab === key
                 ? 'bg-kraken-beige text-kraken-dark'
                 : 'text-kraken-light hover:bg-kraken-beige hover:bg-opacity-10'
@@ -392,18 +398,82 @@ const Dashboard: React.FC = () => {
         </>
       )}
 
+      {activeTab === 'temporal' && (
+        <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg overflow-hidden">
+          <div className="p-4 border-b border-kraken-beige border-opacity-20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-kraken-light font-mono">Weather Channel Style Time-Lapse</h3>
+                <p className="text-kraken-light opacity-70 font-mono text-sm mt-1">
+                  Watch air quality patterns move across time • NASA satellite data • Multiple layers
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-kraken-beige bg-opacity-20">
+                  <Clock className="w-6 h-6 text-kraken-beige" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="h-[700px]">
+            <TemporalNASAMap
+              center={[currentLocation.lat, currentLocation.lon]}
+              zoom={6}
+            />
+          </div>
+        </div>
+      )}
+
       {activeTab === 'forecast' && (
         <ForecastPanel forecastData={forecastData} />
       )}
 
       {activeTab === 'ai-forecast' && (
-        <AIForecastPanel
-          lat={currentLocation.lat}
-          lon={currentLocation.lon}
-          onForecastGenerated={(forecast) => {
-            console.log('🤖 AI forecast generated:', forecast);
-          }}
-        />
+        <div className="space-y-6">
+          {/* AI Forecast Panel */}
+          <AIForecastPanel
+            lat={currentLocation.lat}
+            lon={currentLocation.lon}
+            onForecastGenerated={(forecast) => {
+              console.log('🤖 AI forecast generated:', forecast);
+              setAiForecast(forecast);
+            }}
+          />
+          
+          {/* Animated Forecast Map */}
+          {aiForecast && (
+            <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg overflow-hidden">
+              <div className="p-4 border-b border-kraken-beige border-opacity-20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-kraken-light font-mono">Animated Forecast Visualization</h3>
+                    <p className="text-kraken-light opacity-70 font-mono text-sm mt-1">
+                      Watch air quality changes over time • Color-coded predictions • Interactive playback
+                    </p>
+                  </div>
+                  {currentForecastTime && (
+                    <div className="text-right">
+                      <div className="text-kraken-beige font-mono text-sm">
+                        Current: {new Date(currentForecastTime).toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="h-[600px]">
+                <AnimatedForecastMap
+                  center={[currentLocation.lat, currentLocation.lon]}
+                  zoom={10}
+                  forecast={aiForecast}
+                  onTimeChange={(timestamp: string, forecastData: AIForecastResult) => {
+                    setCurrentForecastTime(timestamp);
+                    console.log('🕒 Forecast time changed:', timestamp, forecastData);
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Data Sources */}
