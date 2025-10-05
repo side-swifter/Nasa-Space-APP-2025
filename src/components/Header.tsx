@@ -7,9 +7,10 @@ interface HeaderProps {
   locationInfo?: {
     displayName?: string;
   } | null;
+  onShowNotificationConfig?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onBackToHome, locationInfo }) => {
+const Header: React.FC<HeaderProps> = ({ onBackToHome, locationInfo, onShowNotificationConfig }) => {
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -97,12 +98,12 @@ const Header: React.FC<HeaderProps> = ({ onBackToHome, locationInfo }) => {
                   <button
                     onClick={() => {
                       setIsDropdownOpen(false);
-                      // Add notifications functionality here
+                      onShowNotificationConfig?.();
                     }}
                     className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                   >
                     <Bell className="w-4 h-4" />
-                    <span>Notifications</span>
+                    <span>Notification Settings</span>
                   </button>
                   <button
                     onClick={() => {

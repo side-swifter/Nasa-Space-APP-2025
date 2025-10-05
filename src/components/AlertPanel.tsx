@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Info, CheckCircle, XCircle, Brain, Loader2 } from 'lucide-react';
+import { AlertTriangle, Info, CheckCircle, XCircle, Brain, Loader2, Settings } from 'lucide-react';
 import { AirQualityReading } from '../services/nasaApiService';
 import aimlApiService, { AISummaryResponse } from '../services/aimlApiService';
-import simpleAICache from '../services/simpleAICache';
+import notificationService, { NotificationSettings } from '../services/notificationService';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AlertPanelProps {
   currentAirQuality: AirQualityReading | null;
   forecastData?: AirQualityReading[];
+  historicalData?: AirQualityReading[];
+  onShowNotificationConfig?: () => void;
 }
 
 interface Alert {
@@ -18,40 +20,76 @@ interface Alert {
   timestamp: string;
 }
 
-const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData = [] }) => {
+const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData = [], historicalData = [], onShowNotificationConfig }) => {
   const [aiSummary, setAiSummary] = useState<AISummaryResponse | null>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
-  const [hasGeneratedAI, setHasGeneratedAI] = useState(false);
   const [isUsingCache, setIsUsingCache] = useState(false);
+  const [userSettings, setUserSettings] = useState<NotificationSettings | null>(null);
+  const [customAlerts, setCustomAlerts] = useState<Alert[]>([]);
   const { user } = useAuth();
 
-  // Generate AI insights with simple daily caching
+  // Load user notification settings
+  useEffect(() => {
+    const loadUserSettings = async () => {
+      if (!user) return;
+      
+      try {
+        const { supabase } = await import('../lib/supabase');
+        
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', user.$id)
+          .single();
+
+        if (!error && data) {
+          const settings: NotificationSettings = {
+            aiPromptVariables: {
+              healthConditions: data.health_conditions || [],
+              ageGroup: data.age_group || 'adult',
+              airSensitivity: data.air_sensitivity || 'normal',
+              activityLevel: data.activity_level || 'moderate',
+              outdoorActivities: data.outdoor_activities || [],
+              primaryLocation: data.primary_location || 'urban',
+              concerns: data.concerns || [],
+              notificationThresholds: data.notification_thresholds || {
+                aqiWarning: 100,
+                pm25Warning: 35,
+                ozoneWarning: 70
+              }
+            },
+            notificationPreferences: {
+              enableHealthAlerts: data.enable_health_alerts ?? true,
+              enableAIInsights: data.enable_ai_insights ?? true,
+              enableForecastAlerts: data.enable_forecast_alerts ?? true,
+              alertFrequency: data.alert_frequency || 'immediate',
+              customPromptTemplate: data.custom_prompt_template || ''
+            }
+          };
+          setUserSettings(settings);
+        }
+      } catch (error) {
+        console.warn('Failed to load user notification settings:', error);
+      }
+    };
+
+    loadUserSettings();
+  }, [user]);
+
+  // Generate AI insights with actual API calls (no caching for fresh responses)
   useEffect(() => {
     const generateAIInsights = async () => {
-      // Only run if we have data, haven't generated yet, and aren't currently loading
-      if (!currentAirQuality || !aimlApiService.isConfigured() || hasGeneratedAI || isLoadingAI || !user) {
+      // Only run if we have data and AI is configured
+      if (!currentAirQuality || !aimlApiService.isConfigured() || isLoadingAI || !user) {
         return;
       }
 
       setIsLoadingAI(true);
+      
       try {
-        console.log('🤖 Checking user profile for today\'s AI insight...');
+        console.log('🤖 Generating fresh AI insights with actual API call...');
         
-        // First, try to get cached insight from user profile
-        const cachedInsight = await simpleAICache.getCachedInsight(user.$id);
-
-        if (cachedInsight) {
-          console.log('✅ Using cached AI insight from today - no API credits used!');
-          setAiSummary(cachedInsight);
-          setIsUsingCache(true);
-          setHasGeneratedAI(true);
-          setIsLoadingAI(false);
-          return;
-        }
-
-        console.log('🤖 No cached insight from today, generating new AI insights...');
-        
-        // Get user profile if available
+        // Get user profile for context
         let userProfile = null;
         try {
           userProfile = await aimlApiService.getUserProfile(user.$id);
@@ -59,37 +97,67 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
           console.warn('⚠️ Could not fetch user profile for AI insights');
         }
 
-        // Generate new AI summary
+        // Generate NEW AI summary with actual API call and ALL available data
         const summary = await aimlApiService.generateAirQualitySummary({
           currentAirQuality,
           forecastData,
           userProfile: userProfile || undefined,
-          locationName: currentAirQuality?.location?.name
+          locationName: currentAirQuality?.location?.name,
+          // Include all additional context data
+          historicalData: historicalData,
+          weatherData: undefined, // Weather data not available in current structure
+          siteMetadata: {
+            dataSource: 'NASA TEMPO + EPA AirNow',
+            lastUpdated: currentAirQuality?.timestamp,
+            coordinates: {
+              lat: currentAirQuality?.location?.lat,
+              lon: currentAirQuality?.location?.lon
+            },
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          }
         });
-
-        // Save the new insight to user profile
-        await simpleAICache.cacheInsight(user.$id, summary);
 
         setAiSummary(summary);
         setIsUsingCache(false);
-        setHasGeneratedAI(true);
-        console.log('✅ AI insights generated and saved to user profile');
+        
+        // Generate custom alerts based on user settings if available
+        if (userSettings) {
+          const result = await notificationService.triggerNotifications({
+            type: 'health',
+            airQuality: currentAirQuality,
+            forecastData,
+            userSettings,
+            userId: user.$id
+          });
+          
+          if (result.success && result.alerts.length > 0) {
+            setCustomAlerts(result.alerts);
+          }
+        }
+        
+        console.log('✅ Fresh AI insights generated successfully');
         
       } catch (error) {
         console.error('❌ Failed to generate AI insights:', error);
-        setHasGeneratedAI(true); // Prevent retry loops
       } finally {
         setIsLoadingAI(false);
       }
     };
 
-    // Only run once when we first get air quality data and have a user
-    if (currentAirQuality && user && !hasGeneratedAI && !isLoadingAI) {
+    // Generate fresh insights whenever air quality data changes
+    if (currentAirQuality && user && aimlApiService.isConfigured()) {
       generateAIInsights();
     }
-  }, [currentAirQuality?.aqi, user?.$id]); // Depend on AQI and user ID
-  // Generate mock alerts based on air quality data
+  }, [currentAirQuality?.aqi, currentAirQuality?.pm25, currentAirQuality?.o3, user?.$id]); // Depend on key air quality metrics
+
+  // Generate alerts based on air quality data and user settings
   const generateAlerts = (): Alert[] => {
+    // Use custom alerts from notification service if available
+    if (customAlerts.length > 0) {
+      return customAlerts;
+    }
+    
+    // Fallback to default alerts
     const alerts: Alert[] = [];
     const now = new Date();
 
@@ -103,7 +171,12 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
       }];
     }
 
-    // AQI-based alerts
+    // Use user thresholds if available, otherwise use defaults
+    const aqiThreshold = userSettings?.aiPromptVariables.notificationThresholds.aqiWarning || 100;
+    const pm25Threshold = userSettings?.aiPromptVariables.notificationThresholds.pm25Warning || 35;
+    const ozoneThreshold = userSettings?.aiPromptVariables.notificationThresholds.ozoneWarning || 70;
+
+    // AQI-based alerts using user thresholds
     if (currentAirQuality.aqi > 150) {
       alerts.push({
         id: '1',
@@ -112,12 +185,12 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
         message: 'Air quality is unhealthy. Limit outdoor activities and consider wearing a mask.',
         timestamp: now.toISOString(),
       });
-    } else if (currentAirQuality.aqi > 100) {
+    } else if (currentAirQuality.aqi >= aqiThreshold) {
       alerts.push({
         id: '2',
         type: 'warning',
-        title: 'Sensitive Groups Advisory',
-        message: 'Air quality may affect sensitive individuals. Consider reducing outdoor activities.',
+        title: `AQI Alert: ${currentAirQuality.aqi}`,
+        message: `Air quality has exceeded your personal threshold of ${aqiThreshold}. Consider reducing outdoor activities.`,
         timestamp: now.toISOString(),
       });
     } else if (currentAirQuality.aqi <= 50) {
@@ -130,29 +203,27 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
       });
     }
 
-    // PM2.5 specific alerts
-    if (currentAirQuality.pm25 > 35) {
+    // PM2.5 specific alerts using user thresholds
+    if (currentAirQuality.pm25 >= pm25Threshold) {
       alerts.push({
         id: '4',
         type: 'warning',
-        title: 'High PM2.5 Levels',
-        message: `PM2.5 levels are elevated at ${currentAirQuality.pm25} μg/m³. Consider indoor activities.`,
+        title: 'PM2.5 Alert',
+        message: `PM2.5 levels (${currentAirQuality.pm25.toFixed(1)} μg/m³) exceed your threshold of ${pm25Threshold} μg/m³.`,
         timestamp: now.toISOString(),
       });
     }
 
-    // Ozone alerts
-    if (currentAirQuality.o3 > 70) {
+    // Ozone alerts using user thresholds
+    if (currentAirQuality.o3 >= ozoneThreshold) {
       alerts.push({
         id: '5',
         type: 'warning',
-        title: 'Elevated Ozone Levels',
-        message: 'Ground-level ozone is high. Avoid outdoor exercise during peak hours.',
+        title: 'Ozone Alert',
+        message: `Ground-level ozone (${currentAirQuality.o3.toFixed(1)} ppb) exceeds your threshold of ${ozoneThreshold} ppb.`,
         timestamp: now.toISOString(),
       });
     }
-
-    // Removed data source update alert as requested
 
     return alerts.slice(0, 4); // Limit to 4 alerts
   };
@@ -244,9 +315,24 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
             <Brain className="w-4 h-4 mr-2" />
             AI Health Insights
           </h4>
-          {isLoadingAI && (
-            <Loader2 className="w-4 h-4 text-kraken-beige animate-spin" />
-          )}
+          <div className="flex items-center space-x-2">
+            {onShowNotificationConfig && (
+              <button
+                onClick={onShowNotificationConfig}
+                className="flex items-center space-x-1 px-2 py-1 bg-kraken-beige bg-opacity-20 text-kraken-beige rounded text-xs font-mono hover:bg-opacity-30 transition-colors"
+                title="Configure AI settings"
+              >
+                <Settings className="w-3 h-3" />
+                <span>Config</span>
+              </button>
+            )}
+            {isLoadingAI && (
+              <div className="flex items-center space-x-1 text-kraken-beige text-xs font-mono">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Generating AI insights...</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* AI Warning */}

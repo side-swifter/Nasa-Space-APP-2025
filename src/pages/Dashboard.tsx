@@ -8,6 +8,7 @@ import ForecastPanel from '../components/ForecastPanel';
 import AIForecastPanel from '../components/AIForecastPanel';
 import AnimatedForecastMap from '../components/AnimatedForecastMap';
 import TemporalNASAMap from '../components/TemporalNASAMap';
+import NotificationConfig from '../components/NotificationConfig';
 import nasaApiService, { AirQualityReading } from '../services/nasaApiService';
 import realAirQualityService from '../services/realAirQualityService';
 import locationService from '../services/locationService';
@@ -22,7 +23,8 @@ const Dashboard: React.FC = () => {
   const [currentForecastTime, setCurrentForecastTime] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'forecast' | 'ai-forecast' | 'temporal'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'forecast' | 'ai-forecast'>('overview');
+  const [showNotificationConfig, setShowNotificationConfig] = useState(false);
 
   useEffect(() => {
     // Get user's location with city name
@@ -289,13 +291,43 @@ const Dashboard: React.FC = () => {
       <AlertPanel 
         currentAirQuality={currentAirQuality} 
         forecastData={forecastData}
+        historicalData={historicalData}
+        onShowNotificationConfig={() => setShowNotificationConfig(true)}
       />
+
+      {/* Notification Configuration Modal */}
+      {showNotificationConfig && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-kraken-beige font-mono">Notification & AI Settings</h2>
+                <button
+                  onClick={() => setShowNotificationConfig(false)}
+                  className="text-kraken-light hover:text-kraken-beige transition-colors text-2xl font-mono"
+                >
+                  ×
+                </button>
+              </div>
+              <NotificationConfig
+                onSettingsChange={(settings) => {
+                  console.log('✅ Notification settings updated:', settings);
+                  // Settings are automatically saved to database
+                }}
+                onTriggerAI={() => {
+                  // Force refresh AI insights by clearing state
+                  window.location.reload();
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="flex space-x-1 bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-1">
         {[
           { key: 'overview', label: 'Overview', icon: Map },
-          { key: 'temporal', label: 'Time-Lapse Map', icon: Clock },
           { key: 'forecast', label: 'Standard Forecast', icon: Eye },
           { key: 'ai-forecast', label: 'AI Forecast', icon: Brain }
         ].map(({ key, label, icon: Icon }) => (
@@ -339,6 +371,7 @@ const Dashboard: React.FC = () => {
                 <AirQualityMap 
                   currentLocation={currentLocation}
                   onLocationChange={handleLocationChange}
+                  currentAirQuality={currentAirQuality}
                 />
               </div>
             </div>
@@ -398,7 +431,7 @@ const Dashboard: React.FC = () => {
         </>
       )}
 
-      {activeTab === 'temporal' && (
+      {false && (
         <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg overflow-hidden">
           <div className="p-4 border-b border-kraken-beige border-opacity-20">
             <div className="flex items-center justify-between">

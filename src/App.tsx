@@ -50,6 +50,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 // App Layout Component
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);
+  const [showNotificationConfig, setShowNotificationConfig] = useState(false);
 
   useEffect(() => {
     // Get user's location with city name
@@ -78,11 +79,40 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-kraken-dark flex flex-col">
-      <Header locationInfo={locationInfo} />
+      <Header 
+        locationInfo={locationInfo} 
+        onShowNotificationConfig={() => setShowNotificationConfig(true)}
+      />
       <main className="flex-1 container mx-auto px-4 py-6">
         {children}
       </main>
       <Footer />
+      
+      {/* Global Notification Configuration Modal */}
+      {showNotificationConfig && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-kraken-beige font-mono">Notification & AI Settings</h2>
+                <button
+                  onClick={() => setShowNotificationConfig(false)}
+                  className="text-kraken-light hover:text-kraken-beige transition-colors text-2xl font-mono"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-6">
+                <p className="text-kraken-light font-mono text-center">
+                  Notification settings are available in the Dashboard's Alert Panel.
+                  <br />
+                  Navigate to the Dashboard to configure your AI prompt variables and notification preferences.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -33,3 +33,25 @@ body {
 .air-quality-hazardous {
   background-color: #7c2d12;
 }
+
+/* NASA GIBS Pollution Overlay Styles */
+.pollution-overlay {
+  mix-blend-mode: normal;
+}
+
+.ozone-overlay {
+  filter: saturate(1.2);
+}
+
+.aerosol-overlay {
+  filter: saturate(1.3);
+}
+
+.no2-overlay {
+  filter: saturate(1.2);
+}
+
+/* Leaflet map container adjustments */
+.leaflet-container {
+  background: #ffffff !important;
+}

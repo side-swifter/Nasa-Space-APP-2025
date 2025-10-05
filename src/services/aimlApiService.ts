@@ -16,6 +16,17 @@ interface AISummaryRequest {
   forecastData: AirQualityReading[];
   userProfile?: UserProfile;
   locationName?: string;
+  historicalData?: AirQualityReading[];
+  weatherData?: any;
+  siteMetadata?: {
+    dataSource?: string;
+    lastUpdated?: string;
+    coordinates?: {
+      lat?: number;
+      lon?: number;
+    };
+    timezone?: string;
+  };
 }
 
 interface AISummaryResponse {
@@ -131,7 +142,7 @@ Rules:
   }
 
   private buildPrompt(data: AISummaryRequest): string {
-    const { currentAirQuality, forecastData, userProfile, locationName } = data;
+    const { currentAirQuality, forecastData, userProfile, locationName, historicalData, weatherData, siteMetadata } = data;
     
     let prompt = `Current Air Quality Data for ${locationName || 'your location'}:
 - AQI: ${currentAirQuality.aqi}
@@ -186,7 +197,35 @@ Rules:
       }
     }
 
-    prompt += `\n\nPlease provide a personalized air quality summary and recommendations in JSON format.`;
+    // Add historical context if available
+    if (historicalData && historicalData.length > 0) {
+      const avgHistoricalAQI = historicalData.reduce((sum, reading) => sum + reading.aqi, 0) / historicalData.length;
+      const trend = avgHistoricalAQI > currentAirQuality.aqi ? 'improving from recent days' : 
+                   avgHistoricalAQI < currentAirQuality.aqi ? 'worsening from recent days' : 'stable compared to recent days';
+      prompt += `\n\nHistorical Context (Past 7 days):
+- Average AQI: ${Math.round(avgHistoricalAQI)} (trend: ${trend})
+- Data points: ${historicalData.length} readings`;
+    }
+
+    // Add weather context if available
+    if (weatherData) {
+      prompt += `\n\nWeather Context:
+- Temperature: ${weatherData.temperature || 'N/A'}
+- Humidity: ${weatherData.humidity || 'N/A'}
+- Wind Speed: ${weatherData.windSpeed || 'N/A'}
+- Conditions: ${weatherData.conditions || 'N/A'}`;
+    }
+
+    // Add site metadata
+    if (siteMetadata) {
+      prompt += `\n\nData Source Information:
+- Source: ${siteMetadata.dataSource || 'Multiple sources'}
+- Last Updated: ${siteMetadata.lastUpdated ? new Date(siteMetadata.lastUpdated).toLocaleString() : 'Recently'}
+- Location: ${siteMetadata.coordinates?.lat?.toFixed(4)}, ${siteMetadata.coordinates?.lon?.toFixed(4)}
+- Timezone: ${siteMetadata.timezone || 'Local time'}`;
+    }
+
+    prompt += `\n\nPlease provide a personalized air quality summary and recommendations in JSON format, considering ALL the above data including historical trends, weather conditions, and real-time measurements.`;
     
     return prompt;
   }
