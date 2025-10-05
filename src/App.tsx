@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
+import PresentationSlideshow from './pages/PresentationSlideshow'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import locationService, { LocationInfo } from './services/locationService'
@@ -125,6 +126,16 @@ function App() {
                 <AppLayout>
                   <Dashboard />
                 </AppLayout>
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Presentation Route - Full Screen */}
+          <Route 
+            path="/presentation" 
+            element={
+              <ProtectedRoute>
+                <PresentationSlideshow />
               </ProtectedRoute>
             } 
           />

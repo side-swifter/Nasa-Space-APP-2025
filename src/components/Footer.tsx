@@ -1,8 +1,10 @@
 import React from 'react';
-import { Satellite, Globe, Heart, ExternalLink } from 'lucide-react';
+import { Satellite, Globe, Heart, ExternalLink, Presentation } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const navigate = useNavigate();
 
   return (
     <footer className="bg-kraken-dark border-t border-kraken-beige border-opacity-20 mt-12">
@@ -132,9 +134,18 @@ const Footer: React.FC = () => {
               <span>for cleaner air</span>
             </div>
 
-            {/* Tech Stack */}
-            <div className="text-kraken-light opacity-70 font-mono text-xs">
-              React • TypeScript • NASA APIs • Tailwind CSS
+            {/* Presentation Button & Tech Stack */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/presentation')}
+                className="flex items-center space-x-2 px-4 py-2 bg-kraken-beige/10 border border-kraken-beige/30 rounded-lg hover:bg-kraken-beige/20 hover:border-kraken-beige/50 transition-all duration-300 group"
+              >
+                <Presentation className="w-4 h-4 text-kraken-beige group-hover:scale-110 transition-transform" />
+                <span className="text-kraken-beige font-mono text-sm">Judge Presentation</span>
+              </button>
+              <div className="text-kraken-light opacity-70 font-mono text-xs">
+                React • TypeScript • NASA APIs • Tailwind CSS
+              </div>
             </div>
           </div>
         </div>
