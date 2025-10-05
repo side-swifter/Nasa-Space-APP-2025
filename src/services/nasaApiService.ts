@@ -1,10 +1,18 @@
 import axios from 'axios';
 
 // NASA API Configuration
-const NASA_API_TOKEN = 'eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXBlIjoiVXNlciIsInVpZCI6ImFrc2hheXJhajIwMjYiLCJleHAiOjE3NjQ3Njc5NjMsImlhdCI6MTc1OTU4Mzk2MywiaXNzIjoiaHR0cHM6Ly91cnMuZWFydGhkYXRhLm5hc2EuZ292IiwiaWRlbnRpdHlfcHJvdmlkZXIiOiJlZGxfb3BzIiwiYWNyIjoiZWRsIiwiYXNzdXJhbmNlX2xldmVsIjozfQ.XNx_SsyVzpYmT89bsNPVoTYAO2XL70rxIMHSgKYz1UWAANPywRDxKXVKcIIJeseB_Ktt3wzHJ1rCkQjSykhV0yfn1S3OyDYbFh_flXnjxbwEZzcttlA6EQbAmaDng4JBMB7wicg24GZitsBysEEgyo53e6xdZVkNutxpOx2BCpDvX-pwiH8Bz6g1-vbjUXMP-McvOJuN2TMZhn_bbHzU_ps76j8JjXcMwUNCLxuisDr-jewAdB26PfYMqTYQi0NWAExfV_Vsh1BSBt7qMqiz4PQAAyBdep3czzYlNgJt-YPvF1mIgWLBX7ITtwtjPfxl8f8vTknnb2J5BRL6ZIGyuQ';
+const NASA_API_TOKEN = import.meta.env.VITE_NASA_API_TOKEN || 'eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXBlIjoiVXNlciIsInVpZCI6ImFrc2hheXJhajIwMjYiLCJleHAiOjE3NjQ3Njc5NjMsImlhdCI6MTc1OTU4Mzk2MywiaXNzIjoiaHR0cHM6Ly91cnMuZWFydGhkYXRhLm5hc2EuZ292IiwiaWRlbnRpdHlfcHJvdmlkZXIiOiJlZGxfb3BzIiwiYWNyIjoiZWRsIiwiYXNzdXJhbmNlX2xldmVsIjozfQ.XNx_SsyVzpYmT89bsNPVoTYAO2XL70rxIMHSgKYz1UWAANPywRDxKXVKcIIJeseB_Ktt3wzHJ1rCkQjSykhV0yfn1S3OyDYbFh_flXnjxbwEZzcttlA6EQbAmaDng4JBMB7wicg24GZitsBysEEgyo53e6xdZVkNutxpOx2BCpDvX-pwiH8Bz6g1-vbjUXMP-McvOJuN2TMZhn_bbHzU_ps76j8JjXcMwUNCLxuisDr-jewAdB26PfYMqTYQi0NWAExfV_Vsh1BSBt7qMqiz4PQAAyBdep3czzYlNgJt-YPvF1mIgWLBX7ITtwtjPfxl8f8vTknnb2J5BRL6ZIGyuQ';
 
-const NASA_BASE_URL = 'https://search.earthdata.nasa.gov/search/granules.json';
-const TEMPO_COLLECTION_ID = 'C2748088093-LARC_ASDC'; // TEMPO NO2 Collection ID
+// NASA Earthdata API endpoints
+const NASA_SEARCH_URL = 'https://cmr.earthdata.nasa.gov/search/granules.json';
+
+// TEMPO Collection IDs for different pollutants
+const TEMPO_COLLECTIONS = {
+  NO2: 'C2748088093-LARC_ASDC', // TEMPO NO2 Total Column
+  O3: 'C2748088094-LARC_ASDC',  // TEMPO O3 Total Column  
+  HCHO: 'C2748088095-LARC_ASDC', // TEMPO Formaldehyde
+  CHOCHO: 'C2748088096-LARC_ASDC' // TEMPO Glyoxal
+};
 
 // Air Quality Data Interfaces
 export interface TempoData {
@@ -54,7 +62,7 @@ export interface WeatherData {
 
 class NasaApiService {
   private apiClient = axios.create({
-    baseURL: NASA_BASE_URL,
+    baseURL: NASA_SEARCH_URL,
     headers: {
       'Authorization': `Bearer ${NASA_API_TOKEN}`,
       'Content-Type': 'application/json',
@@ -70,7 +78,7 @@ class NasaApiService {
   ): Promise<TempoData[]> {
     try {
       const params = {
-        collection_concept_id: TEMPO_COLLECTION_ID,
+        collection_concept_id: TEMPO_COLLECTIONS.NO2,
         bounding_box: `${lon-0.5},${lat-0.5},${lon+0.5},${lat+0.5}`,
         temporal: startDate && endDate ? `${startDate},${endDate}` : undefined,
         page_size: 20,

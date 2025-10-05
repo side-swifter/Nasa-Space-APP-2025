@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({ onBackToHome, locationInfo }) => {
               {/* Kraken Text and Location */}
               <div>
                 <div className="text-xl font-bold text-kraken-dark font-mono">
-                  Kraken AQM
+                  Kraken AQI
                 </div>
                 <div className="text-sm text-kraken-dark opacity-70 font-mono">
                   {locationInfo?.displayName || 'Loading Location...'}

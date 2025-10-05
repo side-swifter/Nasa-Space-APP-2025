@@ -6,6 +6,7 @@ import MetricCard from '../components/MetricCard';
 import AlertPanel from '../components/AlertPanel';
 import ForecastPanel from '../components/ForecastPanel';
 import nasaApiService, { AirQualityReading } from '../services/nasaApiService';
+import realAirQualityService from '../services/realAirQualityService';
 import locationService from '../services/locationService';
 
 const Dashboard: React.FC = () => {
@@ -37,85 +38,100 @@ const Dashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const generateMockData = () => {
+    const fetchRealAirQualityData = async () => {
       setLoading(true);
       setError(null);
       
-      // Simulate API delay
-      setTimeout(() => {
-        try {
-          // Generate mock current air quality
-          const mockCurrent: AirQualityReading = {
-            timestamp: new Date().toISOString(),
-            aqi: 65,
-            pm25: 15.2,
-            pm10: 22.8,
-            no2: 18.5,
-            o3: 45.3,
-            so2: 7.1,
-            co: 0.8,
-            location: {
-              lat: currentLocation.lat,
-              lon: currentLocation.lon,
-              name: `Location ${currentLocation.lat.toFixed(2)}, ${currentLocation.lon.toFixed(2)}`
-            }
-          };
-          setCurrentAirQuality(mockCurrent);
-
-          // Generate mock historical data (last 7 days)
-          const mockHistorical: AirQualityReading[] = [];
-          const now = new Date();
-          for (let i = 167; i >= 0; i--) { // 7 days * 24 hours
-            const timestamp = new Date(now.getTime() - i * 60 * 60 * 1000);
-            const baseAQI = 50 + Math.sin(i / 24 * Math.PI) * 20 + Math.random() * 30;
-            const pm25 = baseAQI / 4.17;
-            
-            mockHistorical.push({
-              timestamp: timestamp.toISOString(),
-              aqi: Math.round(Math.max(15, Math.min(150, baseAQI))),
-              pm25: Math.round(Math.max(5, pm25) * 10) / 10,
-              pm10: Math.round(Math.max(8, pm25 * 1.5) * 10) / 10,
-              no2: Math.round((15 + Math.random() * 20) * 10) / 10,
-              o3: Math.round((30 + Math.random() * 40) * 10) / 10,
-              so2: Math.round((5 + Math.random() * 10) * 10) / 10,
-              co: Math.round((0.5 + Math.random() * 1.5) * 100) / 100,
-              location: mockCurrent.location
-            });
-          }
-          setHistoricalData(mockHistorical);
-
-          // Generate mock forecast data (next 24 hours)
-          const mockForecast: AirQualityReading[] = [];
-          for (let i = 1; i <= 24; i++) {
-            const timestamp = new Date(now.getTime() + i * 60 * 60 * 1000);
-            const baseAQI = 60 + Math.sin(i / 12 * Math.PI) * 15 + Math.random() * 20;
-            const pm25 = baseAQI / 4.17;
-            
-            mockForecast.push({
-              timestamp: timestamp.toISOString(),
-              aqi: Math.round(Math.max(20, Math.min(120, baseAQI))),
-              pm25: Math.round(Math.max(5, pm25) * 10) / 10,
-              pm10: Math.round(Math.max(8, pm25 * 1.5) * 10) / 10,
-              no2: Math.round((15 + Math.random() * 20) * 10) / 10,
-              o3: Math.round((30 + Math.random() * 40) * 10) / 10,
-              so2: Math.round((5 + Math.random() * 10) * 10) / 10,
-              co: Math.round((0.5 + Math.random() * 1.5) * 100) / 100,
-              location: mockCurrent.location
-            });
-          }
-          setForecastData(mockForecast);
-
-        } catch (err) {
-          setError('Failed to generate mock data. Please try again.');
-          console.error('Error generating mock data:', err);
-        } finally {
-          setLoading(false);
+      try {
+        console.log('🌍 Fetching real air quality data for location:', currentLocation);
+        
+        // Fetch current air quality data
+        const current = await realAirQualityService.getCurrentAirQuality(
+          currentLocation.lat, 
+          currentLocation.lon
+        );
+        
+        if (current) {
+          setCurrentAirQuality(current);
+          console.log('✅ Current air quality data loaded:', current);
+        } else {
+          console.log('⚠️ No current air quality data available, using fallback');
+          // Fallback to NASA mock data if no real data available
+          const fallbackCurrent = await nasaApiService.getCurrentAirQuality(
+            currentLocation.lat, 
+            currentLocation.lon
+          );
+          setCurrentAirQuality(fallbackCurrent);
         }
-      }, 1000); // 1 second delay to simulate loading
+
+        // Fetch historical data
+        console.log('📈 Fetching historical air quality data...');
+        const historical = await realAirQualityService.getHistoricalAirQuality(
+          currentLocation.lat, 
+          currentLocation.lon, 
+          7
+        );
+        
+        if (historical.length > 0) {
+          setHistoricalData(historical);
+          console.log(`✅ Historical data loaded: ${historical.length} points`);
+        } else {
+          // Fallback to NASA mock historical data
+          const fallbackHistorical = await nasaApiService.getHistoricalAirQuality(
+            currentLocation.lat, 
+            currentLocation.lon, 
+            7
+          );
+          setHistoricalData(fallbackHistorical);
+          console.log('⚠️ Using fallback historical data');
+        }
+
+        // Fetch forecast data
+        console.log('🔮 Fetching air quality forecast...');
+        const forecast = await realAirQualityService.getAirQualityForecast(
+          currentLocation.lat, 
+          currentLocation.lon
+        );
+        
+        if (forecast.length > 0) {
+          setForecastData(forecast);
+          console.log(`✅ Forecast data loaded: ${forecast.length} points`);
+        } else {
+          // Fallback to NASA mock forecast data
+          const fallbackForecast = await nasaApiService.getAirQualityForecast(
+            currentLocation.lat, 
+            currentLocation.lon
+          );
+          setForecastData(fallbackForecast);
+          console.log('⚠️ Using fallback forecast data');
+        }
+
+      } catch (err) {
+        console.error('❌ Error fetching air quality data:', err);
+        setError('Failed to load air quality data. Please check your internet connection and try again.');
+        
+        // Try fallback to NASA service as last resort
+        try {
+          console.log('🔄 Attempting fallback to NASA service...');
+          const fallbackCurrent = await nasaApiService.getCurrentAirQuality(
+            currentLocation.lat, 
+            currentLocation.lon
+          );
+          setCurrentAirQuality(fallbackCurrent);
+          setError(null); // Clear error if fallback works
+        } catch (fallbackErr) {
+          console.error('❌ Fallback also failed:', fallbackErr);
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
-    generateMockData();
-  }, [currentLocation]);
+    // Fetch data when location changes
+    if (currentLocation.lat !== 0 || currentLocation.lon !== 0) {
+      fetchRealAirQualityData();
+    }
+  }, [currentLocation]); // Depend on currentLocation to refetch when location changes
 
   const handleLocationChange = async (lat: number, lon: number) => {
     setCurrentLocation({ lat, lon });
@@ -157,30 +173,105 @@ const Dashboard: React.FC = () => {
   }
 
   const aqiCategory = currentAirQuality 
-    ? nasaApiService.getAQICategory(currentAirQuality.aqi)
-    : { category: 'Unknown', color: '#6b7280', description: 'No data available' };
+    ? realAirQualityService.getAQICategory(currentAirQuality.aqi)
+    : { name: 'Unknown', color: '#6b7280', description: 'No data available' };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
 
-      {/* Current AQI Banner */}
+      {/* Enhanced AQI Hero Section - Kraken Theme */}
       {currentAirQuality && (
-        <div 
-          className="rounded-lg p-6 text-white font-mono"
-          style={{ backgroundColor: aqiCategory.color }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-3xl font-bold mb-2">
-                AQI {currentAirQuality.aqi}
+        <div className="relative bg-kraken-dark rounded-2xl p-8 border-2 border-kraken-beige border-opacity-40 shadow-2xl overflow-hidden">
+          {/* Subtle background pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-kraken-beige/5 via-transparent to-kraken-red/5"></div>
+          
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            {/* Main AQI Display */}
+            <div className="lg:col-span-1 flex flex-col justify-center text-center h-full">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-kraken-beige font-mono mb-2 tracking-wider">
+                  AIR QUALITY INDEX
+                </h2>
+                <div className="h-px bg-gradient-to-r from-transparent via-kraken-beige to-transparent opacity-50"></div>
               </div>
-              <div className="text-xl mb-1">{aqiCategory.category}</div>
-              <div className="opacity-90">{aqiCategory.description}</div>
+              
+              {/* AQI Number Display - No Circle */}
+              <div className="flex flex-col items-center justify-center">
+                <div 
+                  className="text-6xl font-bold font-mono mb-4"
+                  style={{ color: aqiCategory.color }}
+                >
+                  {currentAirQuality.aqi}
+                </div>
+                
+                {/* Category Label */}
+                <div 
+                  className="text-lg font-mono font-bold mb-2 tracking-wide"
+                  style={{ color: aqiCategory.color }}
+                >
+                  {aqiCategory.name.toUpperCase()}
+                </div>
+                <div className="text-xs text-kraken-light opacity-80 font-mono max-w-xs mx-auto leading-relaxed mb-4">
+                  {aqiCategory.description}
+                </div>
+              </div>
+              
+              <div className="text-xs text-kraken-beige opacity-70 font-mono">
+                Updated: {new Date(currentAirQuality.timestamp).toLocaleTimeString()}
+              </div>
             </div>
-            <div className="text-right">
-              <TrendingUp className="w-8 h-8 mb-2" />
-              <div className="text-sm opacity-90">
-                PM2.5: {currentAirQuality.pm25} μg/m³
+
+            {/* Key Pollutants Grid */}
+            <div className="lg:col-span-2">
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-kraken-beige font-mono tracking-wider">POLLUTANT LEVELS</h3>
+                <div className="h-px bg-gradient-to-r from-kraken-beige via-kraken-beige/50 to-transparent mt-2"></div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-kraken-dark border border-kraken-beige border-opacity-30 rounded-xl p-4 text-center hover:border-opacity-50 transition-all duration-300">
+                  <div className="text-2xl font-bold text-kraken-beige font-mono mb-1">
+                    {currentAirQuality.pm25.toFixed(1)}
+                  </div>
+                  <div className="text-sm text-kraken-light font-mono opacity-90">PM2.5</div>
+                  <div className="text-xs text-kraken-light opacity-60 font-mono">μg/m³</div>
+                  <div className="text-xs text-kraken-beige opacity-70 font-mono mt-1">Fine Particles</div>
+                </div>
+                
+                <div className="bg-kraken-dark border border-kraken-beige border-opacity-30 rounded-xl p-4 text-center hover:border-opacity-50 transition-all duration-300">
+                  <div className="text-2xl font-bold text-kraken-beige font-mono mb-1">
+                    {currentAirQuality.pm10.toFixed(1)}
+                  </div>
+                  <div className="text-sm text-kraken-light font-mono opacity-90">PM10</div>
+                  <div className="text-xs text-kraken-light opacity-60 font-mono">μg/m³</div>
+                  <div className="text-xs text-kraken-beige opacity-70 font-mono mt-1">Coarse Particles</div>
+                </div>
+                
+                <div className="bg-kraken-dark border border-kraken-beige border-opacity-30 rounded-xl p-4 text-center hover:border-opacity-50 transition-all duration-300">
+                  <div className="text-2xl font-bold text-kraken-beige font-mono mb-1">
+                    {currentAirQuality.no2.toFixed(1)}
+                  </div>
+                  <div className="text-sm text-kraken-light font-mono opacity-90">NO₂</div>
+                  <div className="text-xs text-kraken-light opacity-60 font-mono">ppb</div>
+                  <div className="text-xs text-kraken-beige opacity-70 font-mono mt-1">Nitrogen Dioxide</div>
+                </div>
+                
+                <div className="bg-kraken-dark border border-kraken-beige border-opacity-30 rounded-xl p-4 text-center hover:border-opacity-50 transition-all duration-300">
+                  <div className="text-2xl font-bold text-kraken-beige font-mono mb-1">
+                    {currentAirQuality.o3.toFixed(1)}
+                  </div>
+                  <div className="text-sm text-kraken-light font-mono opacity-90">O₃</div>
+                  <div className="text-xs text-kraken-light opacity-60 font-mono">ppb</div>
+                  <div className="text-xs text-kraken-beige opacity-70 font-mono mt-1">Ground Ozone</div>
+                </div>
+              </div>
+              
+              {/* NASA TEMPO Badge */}
+              <div className="mt-4 flex items-center justify-center">
+                <div className="bg-kraken-beige bg-opacity-10 border border-kraken-beige border-opacity-30 rounded-full px-4 py-2 flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-kraken-beige rounded-full animate-pulse"></div>
+                  <span className="text-xs text-kraken-beige font-mono font-bold tracking-wider">LIVE NASA TEMPO DATA</span>
+                </div>
               </div>
             </div>
           </div>
@@ -193,61 +284,82 @@ const Dashboard: React.FC = () => {
         forecastData={forecastData}
       />
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="NO₂"
-          value={currentAirQuality?.no2 || 0}
-          unit="ppb"
-          icon={<Wind className="w-5 h-5" />}
-          color="text-blue-400"
-          dataType="no2"
-        />
-        <MetricCard
-          title="O₃"
-          value={currentAirQuality?.o3 || 0}
-          unit="ppb"
-          icon={<Eye className="w-5 h-5" />}
-          color="text-green-400"
-          dataType="o3"
-        />
-        <MetricCard
-          title="PM2.5"
-          value={currentAirQuality?.pm25 || 0}
-          unit="μg/m³"
-          icon={<Droplets className="w-5 h-5" />}
-          color="text-purple-400"
-          dataType="pm25"
-        />
-        <MetricCard
-          title="PM10"
-          value={currentAirQuality?.pm10 || 0}
-          unit="μg/m³"
-          icon={<Thermometer className="w-5 h-5" />}
-          color="text-orange-400"
-          dataType="pm10"
-        />
+      {/* Large Interactive Map Section */}
+      <div className="bg-kraken-dark rounded-xl border border-kraken-beige border-opacity-20 shadow-lg overflow-hidden">
+        <div className="p-6 border-b border-kraken-beige border-opacity-20 bg-gradient-to-r from-kraken-dark to-gray-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-kraken-light font-mono mb-2">NASA Air Quality Map</h3>
+              <p className="text-kraken-light opacity-70 font-mono text-sm">
+                Live satellite data • Interactive layers • Real-time monitoring
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-kraken-beige bg-opacity-20">
+                <TrendingUp className="w-8 h-8 text-kraken-beige" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="p-0">
+          <div className="h-[600px]">
+            <AirQualityMap 
+              currentLocation={currentLocation}
+              onLocationChange={handleLocationChange}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Map */}
-        <div className="chart-container">
-          <h3 className="text-lg font-bold text-kraken-light mb-4 font-mono">
-            Air Quality Map
-          </h3>
-          <AirQualityMap 
-            currentLocation={currentLocation}
-            onLocationChange={handleLocationChange}
-          />
+      {/* Secondary Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Historical Chart - Takes up 3 columns */}
+        <div className="lg:col-span-3 bg-kraken-dark rounded-xl border border-kraken-beige border-opacity-20 shadow-lg">
+          <div className="p-6 border-b border-kraken-beige border-opacity-20">
+            <h3 className="text-xl font-bold text-kraken-light font-mono">Historical Trends (7 Days)</h3>
+            <p className="text-kraken-light opacity-70 font-mono text-sm mt-1">
+              Track air quality changes over time
+            </p>
+          </div>
+          <div className="p-6">
+            <AirQualityChart data={historicalData} />
+          </div>
         </div>
 
-        {/* Historical Chart */}
-        <div className="chart-container">
-          <h3 className="text-lg font-bold text-kraken-light mb-4 font-mono">
-            Historical Trends (7 Days)
-          </h3>
-          <AirQualityChart data={historicalData} />
+        {/* Compact Metrics - Takes up 1 column */}
+        <div className="space-y-4">
+          <MetricCard
+            title="NO₂"
+            value={currentAirQuality?.no2 || 0}
+            unit="ppb"
+            icon={<Wind className="w-5 h-5" />}
+            color="text-blue-400"
+            dataType="no2"
+          />
+          <MetricCard
+            title="O₃"
+            value={currentAirQuality?.o3 || 0}
+            unit="ppb"
+            icon={<Eye className="w-5 h-5" />}
+            color="text-green-400"
+            dataType="o3"
+          />
+          <MetricCard
+            title="SO₂"
+            value={currentAirQuality?.so2 || 0}
+            unit="ppb"
+            icon={<Droplets className="w-5 h-5" />}
+            color="text-purple-400"
+            dataType="so2"
+          />
+          <MetricCard
+            title="CO"
+            value={currentAirQuality?.co || 0}
+            unit="ppm"
+            icon={<Thermometer className="w-5 h-5" />}
+            color="text-orange-400"
+            dataType="co"
+          />
         </div>
       </div>
 
@@ -255,18 +367,26 @@ const Dashboard: React.FC = () => {
       <ForecastPanel forecastData={forecastData} />
 
       {/* Data Sources */}
-      <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-4">
-        <h4 className="text-kraken-beige font-mono font-bold mb-2">Data Sources</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-kraken-light font-mono">
-          <div>
-            <strong>NASA TEMPO:</strong> Satellite-based atmospheric measurements
-          </div>
-          <div>
-            <strong>Ground Stations:</strong> Real-time air quality monitoring
-          </div>
-          <div>
-            <strong>Weather Data:</strong> Meteorological conditions affecting air quality
-          </div>
+      <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-6">
+        <h4 className="text-kraken-beige font-mono font-bold mb-4 text-lg">Real-Time Data Sources</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-kraken-light font-mono">
+          {realAirQualityService.getDataSources().map((source, index) => (
+            <div key={index} className="flex items-start space-x-3">
+              <div className={`w-2 h-2 rounded-full mt-2 ${source.available ? 'bg-green-400' : 'bg-red-400'}`}></div>
+              <div>
+                <strong className="text-kraken-beige">{source.name}:</strong> {source.description}
+                <div className={`text-xs mt-1 ${source.available ? 'text-green-400' : 'text-red-400'}`}>
+                  {source.available ? '✓ Active' : '✗ Unavailable'}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 pt-4 border-t border-kraken-beige border-opacity-20">
+          <p className="text-xs text-kraken-light opacity-70 font-mono">
+            Data is fetched in real-time from EPA's AirNow network and NASA's TEMPO satellite. 
+            Fallback data is provided when real-time sources are unavailable.
+          </p>
         </div>
       </div>
     </div>

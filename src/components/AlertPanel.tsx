@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Info, CheckCircle, XCircle, Brain, Loader2 } from 'lucide-react';
 import { AirQualityReading } from '../services/nasaApiService';
 import aimlApiService, { AISummaryResponse } from '../services/aimlApiService';
+import simpleAICache from '../services/simpleAICache';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AlertPanelProps {
@@ -21,29 +22,44 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
   const [aiSummary, setAiSummary] = useState<AISummaryResponse | null>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [hasGeneratedAI, setHasGeneratedAI] = useState(false);
+  const [isUsingCache, setIsUsingCache] = useState(false);
   const { user } = useAuth();
 
-  // Generate AI insights when component mounts or data changes
+  // Generate AI insights with simple daily caching
   useEffect(() => {
     const generateAIInsights = async () => {
-      if (!currentAirQuality || !aimlApiService.isConfigured() || hasGeneratedAI || isLoadingAI) {
+      // Only run if we have data, haven't generated yet, and aren't currently loading
+      if (!currentAirQuality || !aimlApiService.isConfigured() || hasGeneratedAI || isLoadingAI || !user) {
         return;
       }
 
       setIsLoadingAI(true);
       try {
-        console.log('🤖 Generating AI insights...');
+        console.log('🤖 Checking user profile for today\'s AI insight...');
+        
+        // First, try to get cached insight from user profile
+        const cachedInsight = await simpleAICache.getCachedInsight(user.$id);
+
+        if (cachedInsight) {
+          console.log('✅ Using cached AI insight from today - no API credits used!');
+          setAiSummary(cachedInsight);
+          setIsUsingCache(true);
+          setHasGeneratedAI(true);
+          setIsLoadingAI(false);
+          return;
+        }
+
+        console.log('🤖 No cached insight from today, generating new AI insights...');
         
         // Get user profile if available
         let userProfile = null;
-        if (user) {
-          try {
-            userProfile = await aimlApiService.getUserProfile(user.$id);
-          } catch (profileError) {
-            console.warn('⚠️ Could not fetch user profile for AI insights');
-          }
+        try {
+          userProfile = await aimlApiService.getUserProfile(user.$id);
+        } catch (profileError) {
+          console.warn('⚠️ Could not fetch user profile for AI insights');
         }
 
+        // Generate new AI summary
         const summary = await aimlApiService.generateAirQualitySummary({
           currentAirQuality,
           forecastData,
@@ -51,9 +67,14 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
           locationName: currentAirQuality?.location?.name
         });
 
+        // Save the new insight to user profile
+        await simpleAICache.cacheInsight(user.$id, summary);
+
         setAiSummary(summary);
+        setIsUsingCache(false);
         setHasGeneratedAI(true);
-        console.log('✅ AI insights generated successfully');
+        console.log('✅ AI insights generated and saved to user profile');
+        
       } catch (error) {
         console.error('❌ Failed to generate AI insights:', error);
         setHasGeneratedAI(true); // Prevent retry loops
@@ -62,8 +83,11 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
       }
     };
 
-    generateAIInsights();
-  }, [currentAirQuality, user, hasGeneratedAI, isLoadingAI]);
+    // Only run once when we first get air quality data and have a user
+    if (currentAirQuality && user && !hasGeneratedAI && !isLoadingAI) {
+      generateAIInsights();
+    }
+  }, [currentAirQuality?.aqi, user?.$id]); // Depend on AQI and user ID
   // Generate mock alerts based on air quality data
   const generateAlerts = (): Alert[] => {
     const alerts: Alert[] = [];
@@ -310,10 +334,18 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
         {/* AI Attribution */}
         {aimlApiService.isConfigured() && (
           <div className="mt-4 pt-3 border-t border-kraken-beige border-opacity-10">
-            <p className="text-kraken-light font-mono text-xs opacity-60 flex items-center">
-              <Brain className="w-3 h-3 mr-1" />
-              Powered by Claude 4 Opus AI • Personalized for your health profile
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-kraken-light font-mono text-xs opacity-60 flex items-center">
+                <Brain className="w-3 h-3 mr-1" />
+                Powered by Claude 4 Opus AI • Personalized for your health profile
+              </p>
+              {isUsingCache && (
+                <div className="flex items-center text-green-400 font-mono text-xs">
+                  <div className="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
+                  Cached (Today)
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
