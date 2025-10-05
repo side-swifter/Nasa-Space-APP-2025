@@ -221,7 +221,7 @@ class NASALanceService {
           lon,
           instrument: this.getInstrumentFromCollection(collectionId),
           parameter,
-          value: this.extractParameterValue(granule, parameter),
+          value: this.extractParameterValue(parameter),
           unit: this.getParameterUnit(parameter),
           quality: this.assessDataQuality(granule),
           source: 'satellite' as const
@@ -400,7 +400,7 @@ class NASALanceService {
     return `${start.toISOString()},${end.toISOString()}`;
   }
 
-  private extractParameterValue(granule: any, parameter: string): number {
+  private extractParameterValue(parameter: string): number {
     // In production, this would parse actual data values from granule metadata
     // For now, simulate realistic values
     const baselines: { [key: string]: number } = {
