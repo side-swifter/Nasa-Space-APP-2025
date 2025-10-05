@@ -27,16 +27,27 @@ interface AISummaryResponse {
 class AIMLApiService {
   private readonly apiKey: string;
   private readonly baseUrl = 'https://api.aimlapi.com/v1';
+  private readonly isEnabled: boolean;
   
   constructor() {
     this.apiKey = import.meta.env.VITE_AIML_API_KEY || '';
+    this.isEnabled = import.meta.env.VITE_ENABLE_AI_RESPONSES === 'true';
     
     if (!this.apiKey) {
       console.warn('⚠️ AI/ML API key not found. AI summaries will not be available.');
     }
+    
+    if (!this.isEnabled) {
+      console.log('🚫 AI responses are disabled via VITE_ENABLE_AI_RESPONSES flag');
+    }
   }
 
   async generateAirQualitySummary(data: AISummaryRequest): Promise<AISummaryResponse> {
+    if (!this.isEnabled) {
+      console.log('🚫 AI responses disabled - returning default response');
+      return this.getDefaultResponse(data.currentAirQuality.aqi);
+    }
+    
     if (!this.apiKey) {
       throw new Error('AI/ML API key not configured');
     }
@@ -231,9 +242,37 @@ Rules:
     }
   }
 
-  // Check if API is configured
+  // Check if API is configured and enabled
   isConfigured(): boolean {
-    return !!this.apiKey;
+    return !!this.apiKey && this.isEnabled;
+  }
+  
+  // Check if AI responses are enabled
+  isAIEnabled(): boolean {
+    return this.isEnabled;
+  }
+  
+  // Get default response when AI is disabled
+  private getDefaultResponse(aqi: number): AISummaryResponse {
+    const response: AISummaryResponse = {
+      outdoorActivities: [
+        'Light walking',
+        'Outdoor sitting', 
+        'Brief errands'
+      ],
+      precautions: [
+        'Monitor air quality',
+        'Stay hydrated'
+      ]
+    };
+    
+    if (aqi > 100) {
+      response.warning = 'Air quality may affect sensitive individuals';
+      response.outdoorActivities = ['Indoor activities recommended'];
+      response.precautions = ['Limit outdoor exposure', 'Consider wearing a mask'];
+    }
+    
+    return response;
   }
 }
 

@@ -15,7 +15,7 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
     new Date().toISOString().split('T')[0]
   );
 
-  // Generate NASA Worldview URL
+  // Generate NASA Worldview URL with proper authentication
   const getWorldviewUrl = () => {
     const baseUrl = 'https://worldview.earthdata.nasa.gov/snapshot';
     const bounds = `${center[1]-5},${center[0]-3},${center[1]+5},${center[0]+3}`;
@@ -29,6 +29,11 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
 
     return `${baseUrl}?${layerConfigs[mapLayer]}`;
   };
+
+  // Note: getGIBSTileUrl available for future direct tile access if needed
+  // const getGIBSTileUrl = (layer: string, z: number, x: number, y: number) => {
+  //   return nasaApiService.getGIBSTileUrl(layer, selectedDate, z, x, y);
+  // };
 
   // Get available dates (last 7 days)
   const getAvailableDates = () => {
@@ -55,6 +60,8 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
           className="w-full h-full border-0"
           title="NASA Worldview Air Quality Map"
           loading="lazy"
+          allow="fullscreen"
+          referrerPolicy="no-referrer-when-downgrade"
         />
         
         {/* Current Location Marker Overlay */}

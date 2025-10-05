@@ -286,12 +286,13 @@ class NASAMapService {
     return date.toISOString().split('T')[0];
   }
 
-  // Get available dates for TEMPO data
+  // Get available dates for TEMPO data (use dates that are likely to have data)
   getAvailableTEMPODates(): string[] {
     const dates = [];
     const today = new Date();
     
-    for (let i = 0; i < 7; i++) {
+    // Start from 3 days ago to ensure data availability
+    for (let i = 3; i < 10; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       dates.push(this.formatDateForGIBS(date));

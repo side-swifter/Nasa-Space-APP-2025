@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ToggleLeft, ToggleRight } from 'lucide-react';
 import NASAWorldviewMap from './NASAWorldviewMap';
-import NASAMap from './NASAMap';
+import SimpleNASAMap from './SimpleNASAMap';
 
 interface AirQualityMapProps {
   currentLocation: { lat: number; lon: number };
@@ -12,7 +12,7 @@ const AirQualityMap: React.FC<AirQualityMapProps> = ({
   currentLocation,
   onLocationChange
 }) => {
-  const [useInteractiveMap, setUseInteractiveMap] = useState(false);
+  const [useInteractiveMap, setUseInteractiveMap] = useState(true); // Default to interactive NASA map
 
   return (
     <div className="relative w-full h-full">
@@ -39,7 +39,7 @@ const AirQualityMap: React.FC<AirQualityMapProps> = ({
 
       {/* Render appropriate map */}
       {useInteractiveMap ? (
-        <NASAMap
+        <SimpleNASAMap
           center={[currentLocation.lat, currentLocation.lon]}
           zoom={8}
           onLocationSelect={onLocationChange}

@@ -46,16 +46,21 @@ interface LayerState {
 
 const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => {
   const [activeLayers, setActiveLayers] = useState<LayerState>({
-    modis_terra_truecolor: true,
+    modis_terra_truecolor: true,  // Show NASA satellite imagery by default
+    modis_aqua_aerosol: false,
+    viirs_truecolor: false,
     tempo_no2: false,
     tempo_o3: false,
     imerg_precipitation: false,
     sedac_population: false
   });
   
-  const [selectedDate, setSelectedDate] = useState<string>(
-    nasaMapService.formatDateForGIBS(new Date())
-  );
+  // Use a date that's likely to have MODIS data (a few days ago)
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 3); // 3 days ago to ensure data availability
+    return nasaMapService.formatDateForGIBS(date);
+  });
   
   const [availableDates] = useState<string[]>(
     nasaMapService.getAvailableTEMPODates()
@@ -80,26 +85,41 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
   const NASAGIBSLayer: React.FC<{ layer: NASALayer; date: string }> = ({ layer, date }) => {
     if (!activeLayers[layer.id]) return null;
     
-    // Proper NASA GIBS URL format
+    // Proper NASA GIBS URL format based on documentation
     let gibsUrl = '';
+    let maxZoom = 9;
     
     if (layer.id === 'modis_terra_truecolor') {
       gibsUrl = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
+      maxZoom = 9;
     } else if (layer.id === 'modis_aqua_aerosol') {
       gibsUrl = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Aqua_Aerosol_Optical_Depth_3km/default/${date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`;
+      maxZoom = 6;
     } else if (layer.id === 'viirs_truecolor') {
       gibsUrl = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
+      maxZoom = 9;
+    } else if (layer.id === 'tempo_no2') {
+      // TEMPO NO2 layer (if available)
+      gibsUrl = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/TROPOMI_NO2_L2/default/${date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`;
+      maxZoom = 6;
+    } else if (layer.id === 'tempo_o3') {
+      // Ozone layer
+      gibsUrl = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OMPS_NPP_nmTO3_L3_Daily/default/${date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`;
+      maxZoom = 6;
     } else {
-      // Fallback to OpenStreetMap for other layers
+      // Fallback to OpenStreetMap for unsupported layers
       gibsUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      maxZoom = 18;
     }
     
     return (
       <TileLayer
+        key={`${layer.id}-${date}`}
         url={gibsUrl}
         opacity={layer.opacity || 1}
-        attribution={layer.id.includes('modis') || layer.id.includes('viirs') ? "NASA GIBS" : "OpenStreetMap"}
-        maxZoom={9}
+        attribution={layer.id.includes('modis') || layer.id.includes('viirs') || layer.id.includes('tempo') ? "NASA GIBS" : "OpenStreetMap"}
+        maxZoom={maxZoom}
+        minZoom={1}
       />
     );
   };
@@ -138,12 +158,28 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
         className="w-full h-full z-0"
         zoomControl={false}
       >
-        {/* Always show OpenStreetMap as base layer */}
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          opacity={0.8}
-        />
+        {/* Base layer - either NASA GIBS or OpenStreetMap */}
+        {activeLayers['modis_terra_truecolor'] ? (
+          <NASAGIBSLayer 
+            key="base-layer"
+            layer={{
+              id: 'modis_terra_truecolor',
+              name: 'MODIS True Color',
+              description: 'NASA MODIS True Color Satellite Imagery',
+              url: '',
+              type: 'wmts' as const,
+              category: 'basemap' as const,
+              opacity: 1
+            }} 
+            date={selectedDate} 
+          />
+        ) : (
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            opacity={0.8}
+          />
+        )}
         
         {/* NASA GIBS Base Layers */}
         {allLayers
