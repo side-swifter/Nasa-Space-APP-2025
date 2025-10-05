@@ -20,17 +20,20 @@ interface Alert {
 const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData = [] }) => {
   const [aiSummary, setAiSummary] = useState<AISummaryResponse | null>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [hasGeneratedAI, setHasGeneratedAI] = useState(false);
   const { user } = useAuth();
 
   // Generate AI insights when component mounts or data changes
   useEffect(() => {
     const generateAIInsights = async () => {
-      if (!currentAirQuality || !aimlApiService.isConfigured()) {
+      if (!currentAirQuality || !aimlApiService.isConfigured() || hasGeneratedAI || isLoadingAI) {
         return;
       }
 
       setIsLoadingAI(true);
       try {
+        console.log('🤖 Generating AI insights...');
+        
         // Get user profile if available
         let userProfile = null;
         if (user) {
@@ -49,15 +52,18 @@ const AlertPanel: React.FC<AlertPanelProps> = ({ currentAirQuality, forecastData
         });
 
         setAiSummary(summary);
+        setHasGeneratedAI(true);
+        console.log('✅ AI insights generated successfully');
       } catch (error) {
         console.error('❌ Failed to generate AI insights:', error);
+        setHasGeneratedAI(true); // Prevent retry loops
       } finally {
         setIsLoadingAI(false);
       }
     };
 
     generateAIInsights();
-  }, [currentAirQuality, user]);
+  }, [currentAirQuality, user, hasGeneratedAI, isLoadingAI]);
   // Generate mock alerts based on air quality data
   const generateAlerts = (): Alert[] => {
     const alerts: Alert[] = [];
