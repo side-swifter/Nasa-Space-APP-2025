@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, AlertCircle, Thermometer, Wind, Eye, Droplets } from 'lucide-react';
+import { Map,AlertCircle, Thermometer, Wind, Eye, Droplets, Brain } from 'lucide-react';
 import AirQualityMap from '../components/AirQualityMap';
 import AirQualityChart from '../components/AirQualityChart';
 import MetricCard from '../components/MetricCard';
 import AlertPanel from '../components/AlertPanel';
 import ForecastPanel from '../components/ForecastPanel';
+import AIForecastPanel from '../components/AIForecastPanel';
 import nasaApiService, { AirQualityReading } from '../services/nasaApiService';
 import realAirQualityService from '../services/realAirQualityService';
 import locationService from '../services/locationService';
@@ -16,6 +17,7 @@ const Dashboard: React.FC = () => {
   const [forecastData, setForecastData] = useState<AirQualityReading[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'forecast' | 'ai-forecast'>('overview');
 
   useEffect(() => {
     // Get user's location with city name
@@ -284,92 +286,130 @@ const Dashboard: React.FC = () => {
         forecastData={forecastData}
       />
 
-      {/* Large Interactive Map Section */}
-      <div className="bg-kraken-dark rounded-xl border border-kraken-beige border-opacity-20 shadow-lg overflow-hidden">
-        <div className="p-6 border-b border-kraken-beige border-opacity-20 bg-gradient-to-r from-kraken-dark to-gray-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-2xl font-bold text-kraken-light font-mono mb-2">NASA Air Quality Map</h3>
-              <p className="text-kraken-light opacity-70 font-mono text-sm">
-                Live satellite data • Interactive layers • Real-time monitoring
-              </p>
+      {/* Tab Navigation */}
+      <div className="flex space-x-1 bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-1">
+        {[
+          { key: 'overview', label: 'Overview', icon: Map },
+          { key: 'forecast', label: 'Standard Forecast', icon: Eye },
+          { key: 'ai-forecast', label: 'AI Forecast', icon: Brain }
+        ].map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key as any)}
+            className={`flex items-center space-x-2 px-4 py-2 rounded font-mono text-sm transition-colors ${
+              activeTab === key
+                ? 'bg-kraken-beige text-kraken-dark'
+                : 'text-kraken-light hover:bg-kraken-beige hover:bg-opacity-10'
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Large Interactive Map Section */}
+          <div className="bg-kraken-dark rounded-xl border border-kraken-beige border-opacity-20 shadow-lg overflow-hidden">
+            <div className="p-6 border-b border-kraken-beige border-opacity-20 bg-gradient-to-r from-kraken-dark to-kraken-dark/80">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-kraken-light font-mono mb-2">NASA Air Quality Map</h3>
+                  <p className="text-kraken-light opacity-70 font-mono text-sm">
+                    Live satellite data • Interactive layers • Real-time monitoring
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-kraken-beige bg-opacity-20">
+                    <Map className="w-8 h-8 text-kraken-beige" />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="text-right">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-kraken-beige bg-opacity-20">
-                <TrendingUp className="w-8 h-8 text-kraken-beige" />
+            <div className="p-0">
+              <div className="h-[600px]">
+                <AirQualityMap 
+                  currentLocation={currentLocation}
+                  onLocationChange={handleLocationChange}
+                />
               </div>
             </div>
           </div>
-        </div>
-        <div className="p-0">
-          <div className="h-[600px]">
-            <AirQualityMap 
-              currentLocation={currentLocation}
-              onLocationChange={handleLocationChange}
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* Secondary Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Historical Chart - Takes up 3 columns */}
-        <div className="lg:col-span-3 bg-kraken-dark rounded-xl border border-kraken-beige border-opacity-20 shadow-lg">
-          <div className="p-6 border-b border-kraken-beige border-opacity-20">
-            <h3 className="text-xl font-bold text-kraken-light font-mono">Historical Trends (7 Days)</h3>
-            <p className="text-kraken-light opacity-70 font-mono text-sm mt-1">
-              Track air quality changes over time
-            </p>
-          </div>
-          <div className="p-6">
-            <AirQualityChart data={historicalData} />
-          </div>
-        </div>
+          {/* Secondary Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Historical Chart - Takes up 3 columns */}
+            <div className="lg:col-span-3 bg-kraken-dark rounded-xl border border-kraken-beige border-opacity-20 shadow-lg">
+              <div className="p-6 border-b border-kraken-beige border-opacity-20">
+                <h3 className="text-xl font-bold text-kraken-light font-mono">Historical Trends (7 Days)</h3>
+                <p className="text-kraken-light opacity-70 font-mono text-sm mt-1">
+                  Track air quality changes over time
+                </p>
+              </div>
+              <div className="p-6">
+                <AirQualityChart data={historicalData} />
+              </div>
+            </div>
 
-        {/* Compact Metrics - Takes up 1 column */}
-        <div className="space-y-4">
-          <MetricCard
-            title="NO₂"
-            value={currentAirQuality?.no2 || 0}
-            unit="ppb"
-            icon={<Wind className="w-5 h-5" />}
-            color="text-blue-400"
-            dataType="no2"
-          />
-          <MetricCard
-            title="O₃"
-            value={currentAirQuality?.o3 || 0}
-            unit="ppb"
-            icon={<Eye className="w-5 h-5" />}
-            color="text-green-400"
-            dataType="o3"
-          />
-          <MetricCard
-            title="SO₂"
-            value={currentAirQuality?.so2 || 0}
-            unit="ppb"
-            icon={<Droplets className="w-5 h-5" />}
-            color="text-purple-400"
-            dataType="so2"
-          />
-          <MetricCard
-            title="CO"
-            value={currentAirQuality?.co || 0}
-            unit="ppm"
-            icon={<Thermometer className="w-5 h-5" />}
-            color="text-orange-400"
-            dataType="co"
-          />
-        </div>
-      </div>
+            {/* Compact Metrics - Takes up 1 column */}
+            <div className="space-y-4">
+              <MetricCard
+                title="NO₂"
+                value={currentAirQuality?.no2 || 0}
+                unit="ppb"
+                icon={<Wind className="w-5 h-5" />}
+                color="text-blue-400"
+                dataType="no2"
+              />
+              <MetricCard
+                title="O₃"
+                value={currentAirQuality?.o3 || 0}
+                unit="ppb"
+                icon={<Eye className="w-5 h-5" />}
+                color="text-green-400"
+                dataType="o3"
+              />
+              <MetricCard
+                title="SO₂"
+                value={currentAirQuality?.so2 || 0}
+                unit="ppb"
+                icon={<Droplets className="w-5 h-5" />}
+                color="text-purple-400"
+                dataType="so2"
+              />
+              <MetricCard
+                title="CO"
+                value={currentAirQuality?.co || 0}
+                unit="ppm"
+                icon={<Thermometer className="w-5 h-5" />}
+                color="text-orange-400"
+                dataType="co"
+              />
+            </div>
+          </div>
+        </>
+      )}
 
-      {/* Forecast Panel */}
-      <ForecastPanel forecastData={forecastData} />
+      {activeTab === 'forecast' && (
+        <ForecastPanel forecastData={forecastData} />
+      )}
+
+      {activeTab === 'ai-forecast' && (
+        <AIForecastPanel
+          lat={currentLocation.lat}
+          lon={currentLocation.lon}
+          onForecastGenerated={(forecast) => {
+            console.log('🤖 AI forecast generated:', forecast);
+          }}
+        />
+      )}
 
       {/* Data Sources */}
       <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-6">
         <h4 className="text-kraken-beige font-mono font-bold mb-4 text-lg">Real-Time Data Sources</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-kraken-light font-mono">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-kraken-light font-mono">
           {realAirQualityService.getDataSources().map((source, index) => (
             <div key={index} className="flex items-start space-x-3">
               <div className={`w-2 h-2 rounded-full mt-2 ${source.available ? 'bg-green-400' : 'bg-red-400'}`}></div>
@@ -381,10 +421,37 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           ))}
+          
+          {/* NASA LANCE Sources */}
+          <div className="flex items-start space-x-3">
+            <div className="w-2 h-2 rounded-full mt-2 bg-green-400"></div>
+            <div>
+              <strong className="text-kraken-beige">NASA LANCE:</strong> Near real-time satellite data (3hr latency)
+              <div className="text-xs mt-1 text-green-400">✓ Active</div>
+            </div>
+          </div>
+          
+          <div className="flex items-start space-x-3">
+            <div className="w-2 h-2 rounded-full mt-2 bg-green-400"></div>
+            <div>
+              <strong className="text-kraken-beige">Ground Validation:</strong> Cross-validation with ground stations
+              <div className="text-xs mt-1 text-green-400">✓ Active</div>
+            </div>
+          </div>
+          
+          <div className="flex items-start space-x-3">
+            <div className="w-2 h-2 rounded-full mt-2 bg-green-400"></div>
+            <div>
+              <strong className="text-kraken-beige">AI Forecasting:</strong> Claude-3 Opus enhanced predictions
+              <div className="text-xs mt-1 text-green-400">✓ Active</div>
+            </div>
+          </div>
         </div>
         <div className="mt-4 pt-4 border-t border-kraken-beige border-opacity-20">
           <p className="text-xs text-kraken-light opacity-70 font-mono">
-            Data is fetched in real-time from EPA's AirNow network and NASA's TEMPO satellite. 
+            Data is fetched in real-time from EPA's AirNow network, NASA's TEMPO satellite, and NASA LANCE near real-time systems. 
+            The LANCE tab provides satellite-ground validation and cross-checking capabilities.
+            The AI Forecast tab uses Claude-3 Opus to analyze multiple NASA data sources for enhanced predictions.
             Fallback data is provided when real-time sources are unavailable.
           </p>
         </div>

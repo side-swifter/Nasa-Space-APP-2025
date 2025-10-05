@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Calendar, Layers, Satellite, Wind, Eye } from 'lucide-react';
+import { Layers, Satellite, Wind, Eye } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -22,11 +22,29 @@ type LayerType = 'satellite' | 'aerosol' | 'ozone' | 'no2';
 
 const SimpleNASAMap: React.FC<SimpleNASAMapProps> = ({ center, zoom }) => {
   const [selectedLayer, setSelectedLayer] = useState<LayerType>('satellite');
-  const [selectedDate, setSelectedDate] = useState<string>(() => {
+  const selectedDate = (() => {
     // Use a date that's likely to have data (a few days ago)
     const date = new Date();
     date.setDate(date.getDate() - 3);
     return date.toISOString().split('T')[0];
+  })();
+
+  // Custom beige marker icon to match app theme
+  const stationIcon = L.divIcon({
+    className: 'kraken-station-icon',
+    html: `
+      <div style="
+        width: 18px;
+        height: 18px;
+        background: #e5bf99; /* kraken-beige */
+        border: 3px solid #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 0 6px rgba(0,0,0,0.45);
+      "></div>
+    `,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -10]
   });
 
   // Generate proper GIBS tile URLs based on NASA documentation
@@ -60,21 +78,6 @@ const SimpleNASAMap: React.FC<SimpleNASAMapProps> = ({ center, zoom }) => {
     return `${baseUrl}/${config.name}/default/${date}/${config.matrix}/{z}/{y}/{x}.${config.format}`;
   };
 
-  // Get available dates (last 7 days, starting from 3 days ago)
-  const getAvailableDates = (): string[] => {
-    const dates = [];
-    const today = new Date();
-    
-    for (let i = 3; i < 10; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      dates.push(date.toISOString().split('T')[0]);
-    }
-    
-    return dates;
-  };
-
-  const availableDates = getAvailableDates();
 
   const layerButtons = [
     { id: 'satellite' as LayerType, name: 'Satellite', icon: Satellite, color: 'bg-kraken-beige' },
@@ -92,6 +95,7 @@ const SimpleNASAMap: React.FC<SimpleNASAMapProps> = ({ center, zoom }) => {
         className="w-full h-full"
         zoomControl={true}
         attributionControl={true}
+        style={{ position: 'relative', zIndex: 1 }}
       >
         {/* NASA GIBS Tile Layer */}
         <TileLayer
@@ -114,7 +118,7 @@ const SimpleNASAMap: React.FC<SimpleNASAMapProps> = ({ center, zoom }) => {
         )}
 
         {/* Location marker */}
-        <Marker position={center}>
+        <Marker position={center} icon={stationIcon}>
           <Popup>
             <div className="p-2">
               <h3 className="font-bold text-sm">Current Location</h3>
@@ -125,45 +129,29 @@ const SimpleNASAMap: React.FC<SimpleNASAMapProps> = ({ center, zoom }) => {
         </Marker>
       </MapContainer>
 
-      {/* Layer Controls */}
-      <div className="absolute top-4 right-4 space-y-2 z-10">
-        {layerButtons.map((button) => (
-          <button
-            key={button.id}
-            onClick={() => setSelectedLayer(button.id)}
-            className={`block px-3 py-2 rounded font-mono text-xs transition-colors ${
-              selectedLayer === button.id 
-                ? 'bg-kraken-beige text-kraken-dark' 
-                : `${button.color} bg-opacity-80 text-white hover:bg-opacity-100`
-            }`}
-          >
-            <button.icon className="w-4 h-4 inline mr-1" />
-            {button.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Date Selector */}
-      <div className="absolute bottom-4 left-4 right-4 z-10">
-        <div className="bg-black bg-opacity-70 rounded-lg p-3 border border-kraken-beige border-opacity-30">
-          <div className="flex items-center space-x-4">
-            <Calendar className="w-5 h-5 text-kraken-beige" />
-            <span className="text-white font-mono text-sm">Date:</span>
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded px-2 py-1 text-kraken-light font-mono text-sm"
+      {/* Layer Controls - Hidden but easily restorable */}
+      {false && (
+        <div className="absolute top-4 left-4 space-y-2 z-[1001]" style={{ zIndex: 1001 }}>
+          {layerButtons.map((button) => (
+            <button
+              key={button.id}
+              onClick={() => setSelectedLayer(button.id)}
+              className={`block px-3 py-2 rounded font-mono text-xs transition-colors ${
+                selectedLayer === button.id 
+                  ? 'bg-kraken-beige text-kraken-dark' 
+                  : `${button.color} bg-opacity-80 text-white hover:bg-opacity-100`
+              }`}
             >
-              {availableDates.map(date => (
-                <option key={date} value={date}>{date}</option>
-              ))}
-            </select>
-          </div>
+              <button.icon className="w-4 h-4 inline mr-1" />
+              {button.name}
+            </button>
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Layer Info */}
-      <div className="absolute top-4 left-4 bg-black bg-opacity-70 rounded px-3 py-2 border border-kraken-beige border-opacity-30 z-10">
+
+      {/* Layer Info - Moved to touch right edge */}
+      <div className="absolute bottom-4 right-0 bg-black bg-opacity-70 rounded-l px-3 py-2 border-l border-t border-b border-kraken-beige border-opacity-30 z-[1000]" style={{ zIndex: 1000 }}>
         <div className="text-white font-mono text-xs">
           <div className="flex items-center space-x-2 mb-1">
             <Layers className="w-4 h-4 text-kraken-beige" />

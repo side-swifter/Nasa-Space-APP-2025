@@ -64,7 +64,7 @@ class AIMLApiService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'anthropic/claude-opus-4',
+          model: 'claude-3-5-sonnet-20241022',
           messages: [
             {
               role: 'user',

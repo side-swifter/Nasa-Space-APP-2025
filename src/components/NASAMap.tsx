@@ -52,7 +52,8 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
     tempo_no2: false,
     tempo_o3: false,
     imerg_precipitation: false,
-    sedac_population: false
+    sedac_population: false,
+    political_boundaries: true  // Show political boundaries by default
   });
   
   // Use a date that's likely to have MODIS data (a few days ago)
@@ -67,6 +68,24 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
   );
   
   const [isLayerPanelOpen, setIsLayerPanelOpen] = useState(false);
+
+  // Custom beige marker icon to match app theme
+  const stationIcon = L.divIcon({
+    className: 'kraken-station-icon',
+    html: `
+      <div style="
+        width: 18px;
+        height: 18px;
+        background: #e5bf99; /* kraken-beige */
+        border: 3px solid #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 0 6px rgba(0,0,0,0.45);
+      "></div>
+    `,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -10]
+  });
 
   // Simple map click handler - no API calls
   const MapEventHandler = () => {
@@ -137,7 +156,17 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
     ...nasaMapService.getNASABasemaps(),
     ...nasaMapService.getTEMPOLayers(),
     ...nasaMapService.getWeatherLayers(),
-    ...nasaMapService.getPopulationLayers()
+    ...nasaMapService.getPopulationLayers(),
+    // Add political boundaries layer
+    {
+      id: 'political_boundaries',
+      name: 'Political Boundaries',
+      description: 'Country and state boundaries',
+      url: '',
+      type: 'raster' as const,
+      category: 'basemap' as const,
+      opacity: 0.3
+    }
   ];
 
   // Group layers by category
@@ -155,8 +184,9 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
       <MapContainer
         center={center}
         zoom={zoom}
-        className="w-full h-full z-0"
+        className="w-full h-full rounded-lg overflow-hidden"
         zoomControl={false}
+        style={{ position: 'relative', zIndex: 1 }}
       >
         {/* Base layer - either NASA GIBS or OpenStreetMap */}
         {activeLayers['modis_terra_truecolor'] ? (
@@ -202,8 +232,20 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
             <NASAGIBSLayer key={layer.id} layer={layer} date={selectedDate} />
           ))}
 
+        {/* Political Boundaries Overlay - Country and state boundaries */}
+        {activeLayers['political_boundaries'] && (
+          <TileLayer
+            key="political-boundaries"
+            url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_only_labels/{z}/{x}/{y}.png"
+            opacity={0.8}
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            className="political-boundaries"
+            pane="overlayPane"
+          />
+        )}
+
         {/* Mock Ground Stations for demonstration */}
-        <Marker position={[center[0] + 0.1, center[1] + 0.1]}>
+        <Marker position={[center[0] + 0.1, center[1] + 0.1]} icon={stationIcon}>
           <Popup>
             <div className="p-2">
               <h3 className="font-bold text-sm">Air Quality Station 1</h3>
@@ -214,7 +256,7 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
           </Popup>
         </Marker>
         
-        <Marker position={[center[0] - 0.1, center[1] - 0.1]}>
+        <Marker position={[center[0] - 0.1, center[1] - 0.1]} icon={stationIcon}>
           <Popup>
             <div className="p-2">
               <h3 className="font-bold text-sm">Air Quality Station 2</h3>
@@ -231,7 +273,7 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
       </MapContainer>
 
       {/* Layer Control Panel */}
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 left-4 z-[1001]" style={{ zIndex: 1001 }}>
         <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg shadow-lg">
           <button
             onClick={() => setIsLayerPanelOpen(!isLayerPanelOpen)}
@@ -244,6 +286,11 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
           
           {isLayerPanelOpen && (
             <div className="border-t border-kraken-beige border-opacity-20 p-3 max-h-96 overflow-y-auto">
+              <div className="mb-3 pb-2 border-b border-kraken-beige border-opacity-10">
+                <p className="text-kraken-light font-mono text-xs opacity-70">
+                  Satellite imagery via NASA GIBS API
+                </p>
+              </div>
               {Object.entries(layersByCategory).map(([category, layers]) => (
                 <div key={category} className="mb-4">
                   <h4 className="text-kraken-beige font-mono text-xs uppercase mb-2">
@@ -268,7 +315,7 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
       </div>
 
       {/* Time Slider */}
-      <div className="absolute bottom-20 left-4 right-4 z-10">
+      <div className="absolute bottom-4 left-4 right-4 z-[1000]" style={{ zIndex: 1000 }}>
         <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-3">
           <div className="flex items-center space-x-4">
             <Calendar className="w-5 h-5 text-kraken-beige" />
@@ -287,12 +334,12 @@ const NASAMap: React.FC<NASAMapProps> = ({ center, zoom, onLocationSelect }) => 
       </div>
 
       {/* Simple Legend */}
-      <div className="absolute top-4 left-4 z-10">
+      <div className="absolute bottom-4 right-4 z-[1000]" style={{ zIndex: 1000 }}>
         <div className="bg-kraken-dark border border-kraken-beige border-opacity-20 rounded-lg p-3">
           <h4 className="text-kraken-beige font-mono text-sm mb-2">Legend</h4>
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-kraken-beige rounded-full"></div>
               <span className="text-kraken-light font-mono text-xs">Ground Stations</span>
             </div>
           </div>

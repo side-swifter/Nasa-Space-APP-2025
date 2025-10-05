@@ -2,6 +2,24 @@
   height: 400px;
   width: 100%;
   border-radius: 8px;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Ensure Leaflet controls don't interfere with our UI */
+.leaflet-control-container {
+  z-index: 1000 !important;
+}
+
+/* Ensure Leaflet popups appear above tiles but below our UI */
+.leaflet-popup-pane {
+  z-index: 1200 !important;
+}
+
+/* Ensure our overlay elements always appear above map content but below modals */
+.map-overlay {
+  z-index: 1001 !important;
+  position: relative !important;
 }
 
 .chart-container {

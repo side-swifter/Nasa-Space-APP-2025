@@ -106,7 +106,7 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10001] p-4" style={{ zIndex: 10001 }}>
       <div className="bg-kraken-dark border border-kraken-beige border-opacity-30 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-kraken-beige border-opacity-20">

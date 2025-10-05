@@ -73,6 +73,17 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
+                <a 
+                  href="https://harmony.earthdata.nasa.gov/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-kraken-light hover:text-kraken-beige transition-colors flex items-center space-x-1"
+                >
+                  <span>NASA Harmony</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </li>
+              <li>
                 <span className="text-kraken-light">Ground Stations</span>
               </li>
             </ul>

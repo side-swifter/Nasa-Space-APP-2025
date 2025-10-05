@@ -21,10 +21,10 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
     const bounds = `${center[1]-5},${center[0]-3},${center[1]+5},${center[0]+3}`;
     
     const layerConfigs = {
-      satellite: `v=-180,-90,180,90&t=${selectedDate}&l=MODIS_Aqua_CorrectedReflectance_TrueColor,MODIS_Terra_CorrectedReflectance_TrueColor&lg=false&s=${bounds}`,
-      ozone: `v=-180,-90,180,90&t=${selectedDate}&l=OMPS_NPP_nmTO3_L3_Daily,MODIS_Aqua_CorrectedReflectance_TrueColor&lg=false&s=${bounds}`,
-      aerosol: `v=-180,-90,180,90&t=${selectedDate}&l=MODIS_Combined_MAIAC_L2G_AerosolOpticalDepth,MODIS_Aqua_CorrectedReflectance_TrueColor&lg=false&s=${bounds}`,
-      no2: `v=-180,-90,180,90&t=${selectedDate}&l=TROPOMI_NO2_L2,MODIS_Aqua_CorrectedReflectance_TrueColor&lg=false&s=${bounds}`
+      satellite: `v=-180,-90,180,90&t=${selectedDate}&l=MODIS_Aqua_CorrectedReflectance_TrueColor,MODIS_Terra_CorrectedReflectance_TrueColor,Coastlines_15m&lg=false&s=${bounds}`,
+      ozone: `v=-180,-90,180,90&t=${selectedDate}&l=OMPS_NPP_nmTO3_L3_Daily,MODIS_Aqua_CorrectedReflectance_TrueColor,Coastlines_15m&lg=false&s=${bounds}`,
+      aerosol: `v=-180,-90,180,90&t=${selectedDate}&l=MODIS_Combined_MAIAC_L2G_AerosolOpticalDepth,MODIS_Aqua_CorrectedReflectance_TrueColor,Coastlines_15m&lg=false&s=${bounds}`,
+      no2: `v=-180,-90,180,90&t=${selectedDate}&l=TROPOMI_NO2_L2,MODIS_Aqua_CorrectedReflectance_TrueColor,Coastlines_15m&lg=false&s=${bounds}`
     };
 
     return `${baseUrl}?${layerConfigs[mapLayer]}`;
@@ -54,7 +54,7 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
   return (
     <div className="relative w-full h-full bg-kraken-dark rounded-lg overflow-hidden border border-kraken-beige border-opacity-20">
       {/* NASA Worldview Embedded Map */}
-      <div className="relative w-full h-full">
+      <div className="relative w-full h-full" style={{ zIndex: 1 }}>
         <iframe
           src={getWorldviewUrl()}
           className="w-full h-full border-0"
@@ -62,14 +62,16 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
           loading="lazy"
           allow="fullscreen"
           referrerPolicy="no-referrer-when-downgrade"
+          style={{ position: 'relative', zIndex: 1 }}
         />
         
         {/* Current Location Marker Overlay */}
         <div 
-          className="absolute transform -translate-x-1/2 -translate-y-full z-20 pointer-events-none"
+          className="absolute transform -translate-x-1/2 -translate-y-full z-[1002] pointer-events-none"
           style={{
             left: '50%',
-            top: '50%'
+            top: '50%',
+            zIndex: 1002
           }}
         >
           <div className="flex flex-col items-center">
@@ -82,7 +84,7 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
       </div>
 
       {/* Layer Controls */}
-      <div className="absolute top-4 right-4 space-y-2">
+      <div className="absolute top-4 left-4 space-y-2 z-[1001]" style={{ zIndex: 1001 }}>
         <button
           onClick={() => setMapLayer('satellite')}
           className={`block px-3 py-2 rounded font-mono text-xs transition-colors ${
@@ -130,7 +132,7 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
       </div>
 
       {/* Date Selector */}
-      <div className="absolute bottom-4 left-4 right-4">
+      <div className="absolute bottom-4 left-4 right-4 z-[1000]" style={{ zIndex: 1000 }}>
         <div className="bg-black bg-opacity-70 rounded-lg p-3 border border-kraken-beige border-opacity-30">
           <div className="flex items-center space-x-4">
             <Calendar className="w-5 h-5 text-kraken-beige" />
@@ -149,7 +151,7 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
       </div>
 
       {/* NASA Attribution */}
-      <div className="absolute top-4 left-4 bg-black bg-opacity-70 rounded px-3 py-2 border border-kraken-beige border-opacity-30">
+      <div className="absolute top-4 right-4 bg-black bg-opacity-70 rounded px-3 py-2 border border-kraken-beige border-opacity-30 z-[1000]" style={{ zIndex: 1000 }}>
         <div className="text-white font-mono text-xs">
           <div className="flex items-center space-x-2 mb-1">
             <div className="w-2 h-2 bg-red-400 rounded-full"></div>
@@ -161,7 +163,7 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
       </div>
 
       {/* Map Legend */}
-      <div className="absolute bottom-20 left-4 bg-black bg-opacity-70 rounded p-3 border border-kraken-beige border-opacity-30 max-w-xs">
+      <div className="absolute bottom-20 right-4 bg-black bg-opacity-70 rounded p-3 border border-kraken-beige border-opacity-30 max-w-xs z-[1000]" style={{ zIndex: 1000 }}>
         <h4 className="text-white font-mono text-xs font-bold mb-2">
           {mapLayer === 'satellite' && '🛰️ True Color Satellite'}
           {mapLayer === 'ozone' && '🌍 Ozone Column (DU)'}
@@ -177,7 +179,7 @@ const NASAWorldviewMap: React.FC<NASAWorldviewMapProps> = ({
       </div>
 
       {/* Interactive Instructions */}
-      <div className="absolute bottom-4 right-4 bg-black bg-opacity-70 rounded p-2 border border-kraken-beige border-opacity-30">
+      <div className="absolute bottom-4 right-4 bg-black bg-opacity-70 rounded p-2 border border-kraken-beige border-opacity-30 z-[999]" style={{ zIndex: 999 }}>
         <p className="text-white font-mono text-xs text-center">
           🛰️ Live NASA satellite data<br/>
           📅 Historical data available
