@@ -10,12 +10,320 @@ export const slideshowConfig = {
 
   // Slide 1: Title
   title: {
-    title: "KRAKEN Air Quality Platform",
-    subtitle: "Space Apps 2025 - Real-Time Satellite Air Quality Monitoring",
-    content: "Transforming atmospheric data into actionable health insights"
+    title: "KRAKEN",
+    subtitle: "Real-Time Air Quality Forecasting",
+    content: "Powered by NASA TEMPO + Ground Sensors + Weather Data"
   },
 
-  // Slide 2: Technical Architecture
+  // Slide 2: The Challenge
+  challenge: {
+    title: "The Challenge",
+    subtitle: "Current Limitations in Air Quality Monitoring",
+    challenges: [
+      "Real-time air quality monitoring is limited",
+      "Public health decisions need actionable data",
+      "Integration of satellites, ground sensors, and weather is difficult",
+      "Millions exposed to harmful pollutants daily",
+      "Hard to know when air quality is unsafe",
+      "Need tools for both immediate and strategic decision making"
+    ],
+    mapImages: [
+      {
+        title: "Current Air Quality Coverage",
+        description: "Limited ground sensor coverage leaves gaps in monitoring"
+      },
+      {
+        title: "Pollution Heat Map",
+        description: "Shows areas with high pollution concentrations"
+      }
+    ]
+  },
+
+  // Slide 3: The Solution
+  solution: {
+    title: "The Solution",
+    subtitle: "KRAKEN Air Quality Dashboard",
+    features: {
+      aqiDisplay: {
+        title: "Air Quality Index",
+        value: "37",
+        status: "Good",
+        description: "Air quality is satisfactory, and air pollution poses little or no risk"
+      },
+      pollutantLevels: {
+        title: "Pollutant Levels",
+        data: [
+          { name: "PM2.5", value: "8.9", unit: "μg/m³", status: "Good" },
+          { name: "PM10", value: "13.0", unit: "μg/m³", status: "Good" },
+          { name: "NO₂", value: "0.0", unit: "ppb", status: "Good" },
+          { name: "O₃", value: "22.7", unit: "ppb", status: "Good" }
+        ]
+      },
+      healthAlerts: {
+        title: "Health Alerts & Notifications",
+        alerts: [
+          "Good Air Quality - Air quality is ideal. Perfect conditions for outdoor activities.",
+          "No Health Concerns - Air quality poses little to no risk to health."
+        ]
+      },
+      historicalTrends: {
+        title: "Historical Trends (7 Days)",
+        description: "Track air quality changes over time"
+      },
+      nasaMap: {
+        title: "NASA Air Quality Map",
+        description: "Live satellite data + Interactive Layers + Real-time monitoring"
+      }
+    }
+  },
+
+  // Slide 4: Tech Stack
+  techStack: {
+    title: "Tech Stack",
+    subtitle: "Modern Technologies Powering KRAKEN",
+    technologies: {
+      frontend: "React 18+, TypeScript",
+      styling: "Tailwind CSS, Lucide React Icons, Jetbrains Mono typography",
+      visualization: "Recharts",
+      backend: "Supabase",
+      deployment: "Vercel"
+    }
+  },
+
+  // Slide 5: Datasets & APIs
+  datasets: {
+    title: "Datasets & API's",
+    subtitle: "Multi-Source Data Integration",
+    dataSources: [
+      {
+        name: "TEMPO Satellite Data",
+        description: "NASA's Tropospheric Emissions: Monitoring of Pollution instrument provides hourly atmospheric composition data",
+        type: "Satellite",
+        coverage: "North America",
+        frequency: "Hourly",
+        pollutants: ["NO₂", "O₃", "HCHO", "CHOCHO"]
+      },
+      {
+        name: "EPA AirNow",
+        description: "Real-time ground-based air quality monitoring network across the United States",
+        type: "Ground Sensors",
+        coverage: "United States",
+        frequency: "Real-time",
+        pollutants: ["PM2.5", "PM10", "NO₂", "O₃", "SO₂", "CO"]
+      },
+      {
+        name: "Weather Data",
+        description: "Meteorological data for atmospheric modeling and prediction",
+        type: "Weather Stations",
+        coverage: "Global",
+        frequency: "Hourly",
+        parameters: ["Temperature", "Humidity", "Wind Speed", "Pressure"]
+      }
+    ]
+  },
+
+  // Slide 6: Detailed Dataset Usage
+  datasetDetails: {
+    title: "Why We Use Each Dataset",
+    subtitle: "Strategic Data Integration for Comprehensive Air Quality Monitoring",
+    dataSources: [
+      {
+        name: "TEMPO Satellite Data",
+        why: "Provides wide-area atmospheric composition coverage from space",
+        whatItGives: [
+          "Hourly atmospheric pollutant measurements",
+          "NO₂, O₃, HCHO, and CHOCHO concentrations",
+          "Spatial coverage across North America",
+          "Gap-filling for areas without ground sensors"
+        ],
+        howWeUse: [
+          "Primary data source for remote areas",
+          "Cross-validation with ground measurements",
+          "Trend analysis and pattern recognition",
+          "Real-time atmospheric composition mapping"
+        ]
+      },
+      {
+        name: "AirNow (EPA)",
+        description: "Ground-based sensor network providing precise local measurements",
+        why: "Delivers highly accurate, location-specific air quality data",
+        whatItGives: [
+          "Real-time PM2.5, PM10, NO₂, O₃, SO₂, CO levels",
+          "AQI calculations and health categorizations",
+          "High precision ground-truth measurements",
+          "Regulatory compliance data"
+        ],
+        howWeUse: [
+          "Primary data source for populated areas",
+          "Calibration reference for satellite data",
+          "Health alert trigger calculations",
+          "User location-specific recommendations"
+        ]
+      },
+      {
+        name: "NASA GIBS API",
+        description: "Global Imagery Browse Services for satellite visualization",
+        why: "Enables interactive visualization of atmospheric data layers",
+        whatItGives: [
+          "Real-time satellite imagery layers",
+          "MODIS and VIIRS atmospheric products",
+          "Global coverage visualization",
+          "Time-series animation capabilities"
+        ],
+        howWeUse: [
+          "Interactive map layer rendering",
+          "Visual correlation with air quality data",
+          "User-friendly data presentation",
+          "Educational and awareness visualization"
+        ]
+      },
+      {
+        name: "LANCE",
+        description: "Land, Atmosphere Near real-time Capability for EOS",
+        why: "Provides near real-time satellite data processing",
+        whatItGives: [
+          "Near real-time atmospheric data",
+          "Rapid data processing and delivery",
+          "Emergency response capabilities",
+          "Time-critical environmental monitoring"
+        ],
+        howWeUse: [
+          "Rapid response to air quality events",
+          "Real-time alert system triggers",
+          "Emergency notification processing",
+          "Time-sensitive health advisories"
+        ]
+      },
+      {
+        name: "Weather Data Integration",
+        description: "Meteorological context for air quality interpretation",
+        why: "Weather significantly impacts air pollutant dispersion and concentration",
+        whatItGives: [
+          "Wind speed and direction data",
+          "Temperature and humidity readings",
+          "Atmospheric pressure measurements",
+          "Precipitation and weather patterns"
+        ],
+        howWeUse: [
+          "Pollutant dispersion modeling",
+          "Air quality forecast predictions",
+          "Context for unusual readings",
+          "Enhanced user recommendations"
+        ]
+      }
+    ]
+  },
+
+  // Slide 7: Users & Impact
+  usersImpact: {
+    title: "Users & Impact",
+    subtitle: "Who Benefits and How KRAKEN Makes a Difference",
+    userGroups: [
+      "General Public",
+      "Health-sensitive groups", 
+      "Policymakers and decision makers",
+      "Emergency Responders"
+    ],
+    impacts: [
+      "Limit of Exposure to Pollutants",
+      "Data to backup changes",
+      "Alerts to let people know on ongoing environmental changes"
+    ]
+  },
+
+  // Slide 8: The Future of Kraken
+  future: {
+    title: "The Future of Kraken",
+    subtitle: "Expanding Capabilities and Vision",
+    futureGoals: [
+      "Add more datasets to have it have access to more information and create better alerts and guidance",
+      "Develop our own in-house AI model to make better alerts and guidance",
+      "Work with weather stations to make our data more accurate",
+      "Own our very own satellite to control data and have more data for the app."
+    ]
+  },
+
+  // Slide 9: How It Works
+  workflow: {
+    title: "How It Works",
+    subtitle: "Data Processing & User Experience Flow",
+    flowSteps: [
+      {
+        id: 1,
+        title: "User Opens App",
+        description: "User launches KRAKEN Air Quality application",
+        type: "user-action"
+      },
+      {
+        id: 2,
+        title: "Location Detection",
+        description: "App detects user location or allows manual input",
+        type: "system-process"
+      },
+      {
+        id: 3,
+        title: "Login Page",
+        description: "User authentication and profile setup",
+        type: "user-action"
+      },
+      {
+        id: 4,
+        title: "Onboarding",
+        description: "First-time user setup and preferences",
+        type: "user-action"
+      },
+      {
+        id: 5,
+        title: "Dashboard",
+        description: "Main interface showing current air quality data",
+        type: "interface"
+      },
+      {
+        id: 6,
+        title: "Data Collection",
+        description: "Fetch NASA TEMPO satellite data",
+        type: "data-source"
+      },
+      {
+        id: 7,
+        title: "Ground Sensor Data",
+        description: "Retrieve EPA AirNow ground station data",
+        type: "data-source"
+      },
+      {
+        id: 8,
+        title: "Weather Data",
+        description: "Collect meteorological information",
+        type: "data-source"
+      },
+      {
+        id: 9,
+        title: "Data Fusion",
+        description: "Intelligent merging of all data sources",
+        type: "processing"
+      },
+      {
+        id: 10,
+        title: "AQI Calculation",
+        description: "Calculate Air Quality Index and health recommendations",
+        type: "processing"
+      },
+      {
+        id: 11,
+        title: "Real-time Updates",
+        description: "Continuous data refresh and user notifications",
+        type: "system-process"
+      },
+      {
+        id: 12,
+        title: "User Notifications",
+        description: "Health alerts and air quality warnings",
+        type: "user-notification"
+      }
+    ]
+  },
+
+  // Legacy slides (keeping for reference)
   architecture: {
     title: "Technical Architecture & Data Integration",
     subtitle: "Multi-Source Real-Time Air Quality Intelligence System",
@@ -628,7 +936,16 @@ export default async function handler(req) {
 
 // Background gradients for each slide
 export const slideBackgrounds = {
-  title: "bg-gradient-to-br from-kraken-dark via-blue-900/20 to-kraken-dark",
+  title: "bg-gradient-to-br from-kraken-red via-orange-900/40 to-kraken-dark",
+  challenge: "bg-gradient-to-br from-kraken-red via-red-900/40 to-kraken-dark",
+  solution: "bg-gradient-to-br from-kraken-dark via-kraken-red/30 to-kraken-dark",
+  techStack: "bg-gradient-to-br from-kraken-red via-orange-900/40 to-kraken-dark",
+  datasets: "bg-gradient-to-br from-kraken-red via-orange-900/40 to-kraken-dark",
+  datasetDetails: "bg-gradient-to-br from-kraken-red via-orange-900/40 to-kraken-dark",
+  usersImpact: "bg-gradient-to-br from-kraken-red via-orange-900/40 to-kraken-dark",
+  future: "bg-gradient-to-br from-kraken-dark via-gray-900/40 to-kraken-dark",
+  workflow: "bg-gradient-to-br from-kraken-red via-orange-900/40 to-kraken-dark",
+  // Legacy backgrounds
   architecture: "bg-gradient-to-br from-kraken-dark via-blue-900/20 to-kraken-dark",
   dataflow: "bg-gradient-to-br from-kraken-dark via-green-900/20 to-kraken-dark",
   features: "bg-gradient-to-br from-kraken-dark via-purple-900/20 to-kraken-dark",

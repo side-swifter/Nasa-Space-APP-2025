@@ -6,6 +6,7 @@ import { slideshowConfig, slideBackgrounds } from '../config/slideshowData';
 const PresentationSlideshow: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [imagePopup, setImagePopup] = useState<{ src: string; alt: string } | null>(null);
   const navigate = useNavigate();
 
   const slides = [
@@ -17,93 +18,72 @@ const PresentationSlideshow: React.FC = () => {
       background: slideBackgrounds.title
     },
     
-    // Technical Architecture Overview
+    // The Challenge
     {
       id: 2,
-      type: "architecture",
-      ...slideshowConfig.architecture,
-      background: slideBackgrounds.architecture
+      type: "challenge",
+      ...slideshowConfig.challenge,
+      background: slideBackgrounds.challenge
     },
 
-    // Real-Time Data Processing
+    // The Solution
     {
       id: 3,
-      type: "dataflow",
-      ...slideshowConfig.dataflow,
-      background: slideBackgrounds.dataflow
+      type: "solution",
+      ...slideshowConfig.solution,
+      background: slideBackgrounds.solution
     },
 
-    // Interactive Features Demo
+    // Datasets & APIs
     {
       id: 4,
-      type: "features",
-      ...slideshowConfig.features,
-      background: slideBackgrounds.features
+      type: "datasets",
+      ...slideshowConfig.datasets,
+      background: slideBackgrounds.datasets
     },
 
-    // Technical Achievements
+    // Tech Stack & How It Works Combined
     {
       id: 5,
-      type: "achievements",
-      ...slideshowConfig.achievements,
-      background: slideBackgrounds.achievements
+      type: "techStackWorkflow",
+      combinedTitle: "Tech Stack & How It Works",
+      techStack: slideshowConfig.techStack,
+      workflow: slideshowConfig.workflow,
+      background: slideBackgrounds.techStack
     },
 
-    // Code Implementation Details
+    // Dataset Details - Why We Use Each
     {
       id: 6,
-      type: "implementation",
-      ...slideshowConfig.implementation,
-      background: slideBackgrounds.implementation
+      type: "datasetDetails",
+      ...slideshowConfig.datasetDetails,
+      background: slideBackgrounds.datasetDetails
     },
 
-    // Impact & Future Vision
+    // Users & Impact
     {
       id: 7,
-      type: "impact",
-      ...slideshowConfig.impact,
-      background: slideBackgrounds.impact
+      type: "usersImpact",
+      ...slideshowConfig.usersImpact,
+      background: slideBackgrounds.usersImpact
     },
 
-    // Challenges & Solutions
+    // The Future of Kraken
     {
       id: 8,
-      type: "challenges",
-      ...slideshowConfig.challenges,
-      background: slideBackgrounds.challenges
+      type: "future",
+      ...slideshowConfig.future,
+      background: slideBackgrounds.future
     },
 
-    // Platform Analytics & Performance
+    // Thank You
     {
       id: 9,
-      type: "analytics",
-      ...slideshowConfig.analytics,
-      background: slideBackgrounds.analytics
-    },
-
-    // Features & Benefits Showcase
-    {
-      id: 10,
-      type: "showcase",
-      ...slideshowConfig.showcase,
-      background: slideBackgrounds.showcase
-    },
-
-    // Growth & Impact Visualization
-    {
-      id: 11,
-      type: "growth",
-      ...slideshowConfig.growth,
-      background: slideBackgrounds.growth
-    },
-
-    // Thank You & Contact
-    {
-      id: 12,
       type: "thankyou",
       ...slideshowConfig.thankyou,
       background: slideBackgrounds.thankyou
     }
+
   ];
 
   const nextSlide = () => {
@@ -120,19 +100,32 @@ const PresentationSlideshow: React.FC = () => {
     setTimeout(() => setIsAnimating(false), 500);
   };
 
-
   const handleKeyPress = (e: KeyboardEvent) => {
     if (e.key === 'ArrowRight') nextSlide();
     if (e.key === 'ArrowLeft') prevSlide();
-    if (e.key === 'Escape') navigate('/dashboard');
+    if (e.key === 'Escape') {
+      if (imagePopup) {
+        closeImagePopup();
+      } else {
+        navigate('/dashboard');
+      }
+    }
   };
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  }, [imagePopup, navigate]);
 
   const currentSlideData = slides[currentSlide];
+
+  const handleImageClick = (src: string, alt: string) => {
+    setImagePopup({ src, alt });
+  };
+
+  const closeImagePopup = () => {
+    setImagePopup(null);
+  };
 
   const renderSlideContent = () => {
     const slide = currentSlideData as any;
@@ -144,24 +137,496 @@ const PresentationSlideshow: React.FC = () => {
             {/* Logo */}
             <div className="flex justify-center items-center mb-12">
               <img 
-                src="/kraken-octopus.svg" 
-                alt="Kraken Logo" 
-                className="w-24 h-24 object-contain"
+                src="/main-krak.svg" 
+                alt="Main Kraken Logo" 
+                className="w-64 h-64 object-contain"
               />
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold text-kraken-beige font-mono mb-6 leading-tight">
-              {slide.title}
-            </h1>
-            <h2 className="text-xl md:text-2xl text-kraken-light font-mono mb-8 opacity-90 leading-relaxed">
+            <h2 className="text-2xl md:text-3xl text-kraken-light font-mono mb-8 opacity-90 leading-relaxed">
               {slide.subtitle}
             </h2>
-            <p className="text-lg text-kraken-beige opacity-80 font-mono">
+            <p className="text-lg text-kraken-beige opacity-80 font-mono underline">
               {slide.content}
             </p>
+            <div className="mt-8 text-right text-kraken-beige/60 font-mono text-sm">
+              1
+            </div>
           </div>
         );
 
+      case 'challenge':
+        return (
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-5xl font-bold text-kraken-beige mb-8 font-mono">
+              {slide.title}
+            </h1>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left: Challenge Points */}
+              <div className="space-y-4">
+                {slide.challenges?.map((challenge: string, index: number) => (
+                  <div key={index} className="flex items-start">
+                    <div className="w-2 h-2 bg-kraken-beige rounded-full mt-3 mr-4 flex-shrink-0"></div>
+                    <p className="text-xl text-kraken-light font-mono leading-relaxed">
+                      {challenge}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Right: Air Quality Images */}
+              <div className="space-y-6">
+                <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-xl p-4">
+                  <div className="rounded-lg h-48 overflow-hidden mb-3">
+                    <img 
+                      src="/air qual 1.jpeg" 
+                      alt="Air Quality Coverage Map 1" 
+                      className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick('/air qual 1.jpeg', 'Air Quality Coverage Map 1')}
+                    />
+                  </div>
+                  <p className="text-kraken-light font-mono text-sm">Current Air Quality Coverage - Limited ground sensor coverage leaves gaps in monitoring</p>
+                </div>
+                
+                <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-xl p-4">
+                  <div className="rounded-lg h-48 overflow-hidden mb-3">
+                    <img 
+                      src="/air qual 2.jpeg" 
+                      alt="Air Quality Coverage Map 2" 
+                      className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick('/air qual 2.jpeg', 'Air Quality Coverage Map 2')}
+                    />
+                  </div>
+                  <p className="text-kraken-light font-mono text-sm">Pollution Heat Map - Shows areas with high pollution concentrations</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'solution':
+        return (
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-5xl font-bold text-kraken-beige mb-8 font-mono">
+              {slide.title}
+            </h1>
+            
+            {/* Mock Dashboard Interface */}
+            <div className="bg-kraken-dark/80 border border-kraken-beige/30 rounded-2xl p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Left Column: AQI Display */}
+                <div className="space-y-6">
+                  {/* AQI Main Display */}
+                  <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-xl p-6 text-center">
+                    <h3 className="text-kraken-beige font-mono font-bold mb-2">{slide.features?.aqiDisplay?.title}</h3>
+                    <div className="text-6xl font-bold text-green-400 font-mono mb-2">{slide.features?.aqiDisplay?.value}</div>
+                    <div className="text-green-400 font-mono font-bold mb-3">{slide.features?.aqiDisplay?.status}</div>
+                    <p className="text-kraken-light font-mono text-sm">{slide.features?.aqiDisplay?.description}</p>
+                  </div>
+                  
+                  {/* Pollutant Levels */}
+                  <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-xl p-6">
+                    <h3 className="text-kraken-beige font-mono font-bold mb-4">{slide.features?.pollutantLevels?.title}</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {slide.features?.pollutantLevels?.data?.map((pollutant: any, index: number) => (
+                        <div key={index} className="bg-kraken-beige/10 border border-kraken-beige/10 rounded p-3 text-center">
+                          <div className="text-kraken-beige font-mono text-sm font-bold">{pollutant.name}</div>
+                          <div className="text-kraken-light font-mono text-lg">{pollutant.value}</div>
+                          <div className="text-kraken-light/60 font-mono text-xs">{pollutant.unit}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Center Column: Health Alerts & Historical */}
+                <div className="space-y-6">
+                  {/* Health Alerts */}
+                  <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-xl p-6">
+                    <h3 className="text-kraken-beige font-mono font-bold mb-4">{slide.features?.healthAlerts?.title}</h3>
+                    <div className="rounded-lg overflow-hidden mb-4">
+                      <img 
+                        src="/alerts.jpg" 
+                        alt="Health Alerts Interface" 
+                        className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => handleImageClick('/alerts.jpg', 'Health Alerts Interface')}
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      {slide.features?.healthAlerts?.alerts?.map((alert: string, index: number) => (
+                        <div key={index} className="flex items-start">
+                          <CheckCircle className="w-4 h-4 mr-3 mt-1 text-green-400 flex-shrink-0" />
+                          <p className="text-kraken-light font-mono text-sm">{alert}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Historical Trends */}
+                  <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-xl p-6">
+                    <h3 className="text-kraken-beige font-mono font-bold mb-4">{slide.features?.historicalTrends?.title}</h3>
+                    <div className="rounded-lg h-32 overflow-hidden">
+                      <img 
+                        src="/historical trends.jpg" 
+                        alt="Historical Trends Chart" 
+                        className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => handleImageClick('/historical trends.jpg', 'Historical Trends Chart')}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Right Column: NASA Map */}
+                <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-xl p-6">
+                  <h3 className="text-kraken-beige font-mono font-bold mb-4">{slide.features?.nasaMap?.title}</h3>
+                  <div className="rounded-lg h-64 overflow-hidden mb-4">
+                    <img 
+                      src="/main.jpg" 
+                      alt="Main Dashboard Interface" 
+                      className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick('/main.jpg', 'Main Dashboard Interface')}
+                    />
+                  </div>
+                  <p className="text-kraken-light font-mono text-sm">{slide.features?.nasaMap?.description}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'techStackWorkflow':
+        return (
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-5xl font-bold text-kraken-beige mb-8 font-mono">
+              {slide.combinedTitle}
+            </h1>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* Left Side: Tech Stack */}
+              <div>
+                <h2 className="text-3xl font-bold text-kraken-beige mb-6 font-mono">
+                  {slide.techStack?.title}
+                </h2>
+                <div className="space-y-6">
+                  {/* Frontend */}
+                  <div className="text-left">
+                    <h3 className="text-xl font-bold text-kraken-beige font-mono mb-2">
+                      Frontend: <span className="text-kraken-light font-normal">{slide.techStack?.technologies?.frontend}</span>
+                    </h3>
+                  </div>
+                  
+                  {/* Styling & UI */}
+                  <div className="text-left">
+                    <h3 className="text-xl font-bold text-kraken-beige font-mono mb-2">
+                      Styling & UI: <span className="text-kraken-light font-normal">{slide.techStack?.technologies?.styling}</span>
+                    </h3>
+                  </div>
+                  
+                  {/* Visualization */}
+                  <div className="text-left">
+                    <h3 className="text-xl font-bold text-kraken-beige font-mono mb-2">
+                      Visualization: <span className="text-kraken-light font-normal">{slide.techStack?.technologies?.visualization}</span>
+                    </h3>
+                  </div>
+                  
+                  {/* Backend */}
+                  <div className="text-left">
+                    <h3 className="text-xl font-bold text-kraken-beige font-mono mb-2">
+                      Backend: <span className="text-kraken-light font-normal">{slide.techStack?.technologies?.backend}</span>
+                    </h3>
+                  </div>
+                  
+                  {/* Deployment */}
+                  <div className="text-left">
+                    <h3 className="text-xl font-bold text-kraken-beige font-mono mb-2">
+                      Deployment: <span className="text-kraken-light font-normal">{slide.techStack?.technologies?.deployment}</span>
+                    </h3>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right Side: How It Works */}
+              <div>
+                <h2 className="text-3xl font-bold text-kraken-beige mb-6 font-mono">
+                  {slide.workflow?.title}
+                </h2>
+                {/* Workflow Diagram */}
+                <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-2xl p-6">
+                  <div className="flex justify-center">
+                    <img 
+                      src="/flow.PNG" 
+                      alt="How It Works Flow Diagram" 
+                      className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick('/flow.PNG', 'How It Works Flow Diagram')}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'datasets':
+        return (
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-5xl font-bold text-kraken-beige mb-8 font-mono">
+              {slide.title}
+            </h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {slide.dataSources?.map((source: any, index: number) => {
+                const getImageSrc = (sourceName: string): string | undefined => {
+                  if (sourceName.includes('TEMPO')) return '/tempo data.jpg';
+                  if (sourceName.includes('EPA')) return '/epa image.jpg';
+                  if (sourceName.includes('Weather')) return '/weather image.jpg';
+                  return undefined;
+                };
+                
+                const imageSrc = getImageSrc(source.name);
+                
+                return (
+                <div key={index} className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-xl p-6">
+                  <div className="rounded-lg h-32 overflow-hidden mb-4">
+                    {imageSrc ? (
+                      <img 
+                        src={imageSrc} 
+                        alt={`${source.name} Interface`} 
+                        className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => handleImageClick(imageSrc, `${source.name} Interface`)}
+                      />
+                    ) : (
+                      <div className="bg-blue-900/40 rounded-lg h-full flex items-center justify-center">
+                        <span className="text-kraken-beige font-mono font-bold">{source.name}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <h3 className="text-kraken-beige font-mono font-bold mb-3">{source.name}</h3>
+                  <p className="text-kraken-light font-mono text-sm mb-4">{source.description}</p>
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between">
+                      <span className="text-kraken-beige/70 font-mono text-sm">Type:</span>
+                      <span className="text-kraken-light font-mono text-sm">{source.type}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-kraken-beige/70 font-mono text-sm">Coverage:</span>
+                      <span className="text-kraken-light font-mono text-sm">{source.coverage}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-kraken-beige/70 font-mono text-sm">Frequency:</span>
+                      <span className="text-kraken-light font-mono text-sm">{source.frequency}</span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-kraken-beige font-mono font-bold mb-2 text-sm">
+                      {source.pollutants ? 'Pollutants:' : 'Parameters:'}
+                    </h4>
+                    <div className="flex flex-wrap gap-1">
+                      {(source.pollutants || source.parameters)?.map((item: string, idx: number) => (
+                        <span key={idx} className="bg-kraken-beige/10 text-kraken-beige font-mono text-xs px-2 py-1 rounded">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                );
+              })}
+            </div>
+            
+            <div className="mt-8 text-right text-kraken-beige/60 font-mono text-sm">
+              4
+            </div>
+          </div>
+        );
+
+      case 'datasetDetails':
+        return (
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-5xl font-bold text-kraken-beige mb-4 font-mono">
+              {slide.title}
+            </h1>
+            <h2 className="text-xl text-kraken-light mb-8 font-mono opacity-90">
+              {slide.subtitle}
+            </h2>
+            
+            <div className="space-y-6">
+              {slide.dataSources?.map((source: any, index: number) => (
+                <div key={index} className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-xl p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    {/* Left: Dataset Name & Why */}
+                    <div>
+                      <h3 className="text-2xl font-bold text-kraken-beige font-mono mb-3">{source.name}</h3>
+                      <div className="mb-4">
+                        <h4 className="text-kraken-beige font-mono font-bold mb-2 text-sm uppercase tracking-wider">Why We Use It:</h4>
+                        <p className="text-kraken-light font-mono text-sm leading-relaxed">{source.why}</p>
+                      </div>
+                      {source.description && (
+                        <p className="text-kraken-light/70 font-mono text-xs italic">{source.description}</p>
+                      )}
+                    </div>
+                    
+                    {/* Center: What It Gives Us */}
+                    <div>
+                      <h4 className="text-kraken-beige font-mono font-bold mb-3 text-sm uppercase tracking-wider">What It Gives Us:</h4>
+                      <div className="space-y-2">
+                        {source.whatItGives?.map((item: string, idx: number) => (
+                          <div key={idx} className="flex items-start">
+                            <div className="w-2 h-2 bg-kraken-beige rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <p className="text-kraken-light font-mono text-sm leading-relaxed">{item}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Right: How We Use It */}
+                    <div>
+                      <h4 className="text-kraken-beige font-mono font-bold mb-3 text-sm uppercase tracking-wider">How We Use It:</h4>
+                      <div className="space-y-2">
+                        {source.howWeUse?.map((item: string, idx: number) => (
+                          <div key={idx} className="flex items-start">
+                            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <p className="text-kraken-light font-mono text-sm leading-relaxed">{item}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'usersImpact':
+        return (
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-5xl font-bold text-kraken-beige mb-8 font-mono">
+              {slide.title}
+            </h1>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              
+              {/* Left Side: User Groups & Impact Points */}
+              <div className="space-y-8">
+                {/* User Groups */}
+                <div>
+                  <div className="space-y-4">
+                    {slide.userGroups?.map((group: string, index: number) => (
+                      <div key={index} className="flex items-center">
+                        <div className="w-3 h-3 bg-kraken-beige rounded-full mr-4 flex-shrink-0"></div>
+                        <p className="text-2xl text-kraken-light font-mono">{group}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Impact Points */}
+                <div className="mt-12">
+                  <div className="space-y-6">
+                    {slide.impacts?.map((impact: string, index: number) => (
+                      <div key={index} className="flex items-start">
+                        <div className="w-3 h-3 bg-kraken-beige rounded-full mt-3 mr-6 flex-shrink-0"></div>
+                        <p className="text-xl text-kraken-light font-mono leading-relaxed">{impact}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right Side: Overlapping Images */}
+              <div className="flex items-center justify-center">
+                <div className="relative">
+                  {/* Main Emergency Image */}
+                  <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-2xl p-4">
+                    <img 
+                      src="/emergency.jpeg" 
+                      alt="Emergency Response and Impact" 
+                      className="w-80 h-60 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick('/emergency.jpeg', 'Emergency Response and Impact')}
+                    />
+                  </div>
+                  
+                  {/* Overlapping Fire Image */}
+                  <div className="absolute -bottom-4 -right-4 bg-kraken-dark/80 border border-kraken-beige/30 rounded-xl p-3 shadow-2xl">
+                    <img 
+                      src="/fire.jpeg" 
+                      alt="Environmental Emergency - Fire Impact" 
+                      className="w-64 h-48 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick('/fire.jpeg', 'Environmental Emergency - Fire Impact')}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+            
+            <div className="mt-8 text-right text-kraken-beige/60 font-mono text-sm">
+              6
+            </div>
+          </div>
+        );
+
+      case 'future':
+        return (
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-5xl font-bold text-kraken-beige mb-8 font-mono">
+              {slide.title}
+            </h1>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              
+              {/* Left Side: Future Goals */}
+              <div className="space-y-6">
+                {slide.futureGoals?.map((goal: string, index: number) => (
+                  <div key={index} className="flex items-start">
+                    <div className="w-3 h-3 bg-kraken-beige rounded-full mt-3 mr-6 flex-shrink-0"></div>
+                    <p className="text-xl text-kraken-light font-mono leading-relaxed">{goal}</p>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Right Side: Satellite Images */}
+              <div className="flex items-center justify-center">
+                <div className="relative">
+                  {/* Main Satellite Image */}
+                  <div className="bg-kraken-dark/60 border border-kraken-beige/20 rounded-2xl p-4">
+                    <img 
+                      src="/satlite.jpeg" 
+                      alt="Satellite Technology" 
+                      className="w-80 h-60 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick('/satlite.jpeg', 'Satellite Technology')}
+                    />
+                  </div>
+                  
+                  {/* Overlapping Second Satellite Image */}
+                  <div className="absolute -bottom-4 -right-4 bg-kraken-dark/80 border border-kraken-beige/30 rounded-xl p-3 shadow-2xl">
+                    <img 
+                      src="/sat.jpeg" 
+                      alt="Future Satellite Vision" 
+                      className="w-48 h-36 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleImageClick('/sat.jpeg', 'Future Satellite Vision')}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+            
+            <div className="mt-8 text-right text-kraken-beige/60 font-mono text-sm">
+              7
+            </div>
+          </div>
+        );
+
+
+      // Legacy slide types (keeping for reference)
       case 'architecture':
         return (
           <div className="max-w-7xl mx-auto">
@@ -880,6 +1345,29 @@ const PresentationSlideshow: React.FC = () => {
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-kraken-beige/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-kraken-red/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
+
+      {/* Image Popup Modal */}
+      {imagePopup && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-8" onClick={closeImagePopup}>
+          <div className="relative max-w-4xl max-h-full">
+            <button
+              onClick={closeImagePopup}
+              className="absolute -top-4 -right-4 p-2 bg-kraken-dark/80 border border-kraken-beige/30 rounded-full hover:bg-kraken-dark hover:border-kraken-beige/50 transition-all duration-300 z-10"
+            >
+              <X className="w-6 h-6 text-kraken-beige" />
+            </button>
+            <img
+              src={imagePopup.src}
+              alt={imagePopup.alt}
+              className="max-w-full max-h-full object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 rounded-b-lg">
+              <p className="text-kraken-beige font-mono text-center">{imagePopup.alt}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
