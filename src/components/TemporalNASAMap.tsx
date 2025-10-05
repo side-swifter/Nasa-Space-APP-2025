@@ -427,7 +427,7 @@ const TemporalNASAMap: React.FC<TemporalNASAMapProps> = ({
       {/* Instructions */}
       <div className="absolute bottom-4 right-4 bg-black bg-opacity-80 rounded p-2 border border-kraken-beige border-opacity-30 z-[999]">
         <p className="text-white font-mono text-xs text-center max-w-xs">
-          🎬 Weather Channel Style Animation<br/>
+          🎬 Air Quality Timelapse<br/>
           Watch air quality patterns move over time<br/>
           {isPlaying ? '⏸️ Playing...' : '▶️ Press play to start'}
         </p>

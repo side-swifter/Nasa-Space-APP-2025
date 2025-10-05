@@ -403,7 +403,7 @@ const Dashboard: React.FC = () => {
           <div className="p-4 border-b border-kraken-beige border-opacity-20">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-kraken-light font-mono">Weather Channel Style Time-Lapse</h3>
+                <h3 className="text-xl font-bold text-kraken-light font-mono">Air Quality Timelapse</h3>
                 <p className="text-kraken-light opacity-70 font-mono text-sm mt-1">
                   Watch air quality patterns move across time • NASA satellite data • Multiple layers
                 </p>
