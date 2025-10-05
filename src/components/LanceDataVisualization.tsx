@@ -24,7 +24,7 @@ const LanceDataVisualization: React.FC<LanceDataVisualizationProps> = ({
   lat,
   lon,
   selectedParameter,
-  onParameterChange
+
 }) => {
   const [lanceData, setLanceData] = useState<LanceDataPoint[]>([]);
   const [groundData, setGroundData] = useState<GroundStationData[]>([]);
